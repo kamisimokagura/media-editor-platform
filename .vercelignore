@@ -1,0 +1,5 @@
+# Ignore unnecessary files for deployment
+.next
+node_modules
+.env.local
+.env*.local
