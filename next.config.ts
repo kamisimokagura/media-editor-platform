@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Set the correct root directory for Turbopack
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
   // FFmpeg WASM requires these headers for SharedArrayBuffer
   async headers() {
     return [
