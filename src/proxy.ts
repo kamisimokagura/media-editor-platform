@@ -51,7 +51,7 @@ setInterval(() => {
   }
 }, RATE_LIMIT_WINDOW);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Skip static files and API routes that handle their own security
   if (
     request.nextUrl.pathname.startsWith('/_next') ||
