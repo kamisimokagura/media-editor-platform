@@ -527,7 +527,7 @@ export default function HomePage() {
               {[
                 {
                   title: "動画",
-                  formats: ["MP4", "WebM", "MOV", "AVI", "GIF"],
+                  formats: ["MP4", "WebM", "MOV", "AVI", "MKV", "FLV", "WMV", "MPEG", "3GP", "GIF"],
                   gradient: "from-red-500 to-orange-500",
                   icon: (
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -538,7 +538,7 @@ export default function HomePage() {
                 },
                 {
                   title: "画像",
-                  formats: ["PNG", "JPG", "WebP", "GIF", "SVG", "BMP"],
+                  formats: ["PNG", "JPG", "WebP", "AVIF", "GIF", "SVG", "HEIC", "RAW", "BMP", "TIFF", "ICO"],
                   gradient: "from-purple-500 to-pink-500",
                   icon: (
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -548,7 +548,7 @@ export default function HomePage() {
                 },
                 {
                   title: "音声",
-                  formats: ["MP3", "WAV", "OGG", "AAC", "FLAC"],
+                  formats: ["MP3", "WAV", "OGG", "AAC", "FLAC", "M4A", "AIFF", "WMA"],
                   gradient: "from-green-500 to-teal-500",
                   icon: (
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

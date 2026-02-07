@@ -6,10 +6,12 @@ import { useFFmpeg } from "@/hooks/useFFmpeg";
 import { useEditorStore } from "@/stores/editorStore";
 import { Button, DropZone, ProgressBar, Slider } from "@/components/ui";
 import { toast } from "@/stores/toastStore";
+import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
+import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
 import type { ConversionOptions, OutputFormat } from "@/types";
 
 type MediaMode = "video" | "image";
-type ImageFormat = "png" | "jpg" | "webp" | "gif";
+type ImageFormat = "png" | "jpg" | "webp" | "gif" | "avif" | "bmp";
 
 export default function ConvertPage() {
   const [mode, setMode] = useState<MediaMode>("video");
@@ -41,16 +43,27 @@ export default function ConvertPage() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleFilesSelected = useCallback(
-    (files: File[]) => {
+    async (files: File[]) => {
       if (files.length > 0) {
-        const file = files[0];
+        let file = files[0];
 
-        // Auto-detect mode based on file type
-        if (file.type.startsWith("video/")) {
+        // HEIC/RAW変換
+        if (isHeicFile(file)) {
+          toast.info("HEIC画像を変換中...");
+          file = await ensureBrowserCompatibleImage(file);
+          setMode("image");
+        } else if (isRawFile(file)) {
+          toast.info("RAW画像を変換中...");
+          file = await ensureBrowserCompatibleRawImage(file);
+          setMode("image");
+        } else if (file.type.startsWith("video/")) {
           setMode("video");
         } else if (file.type.startsWith("image/")) {
           setMode("image");
+        }
 
+        // Auto-detect mode based on file type
+        if (mode === "image" || file.type.startsWith("image/")) {
           // Load image and get dimensions
           const img = new Image();
           img.onload = () => {
@@ -65,7 +78,7 @@ export default function ConvertPage() {
         setPreviewUrl(URL.createObjectURL(file));
       }
     },
-    []
+    [mode]
   );
 
   const handleResizeWidthChange = (newWidth: number) => {
@@ -149,6 +162,14 @@ export default function ConvertPage() {
           mimeType = "image/webp";
           extension = "webp";
           break;
+        case "avif":
+          mimeType = "image/avif";
+          extension = "avif";
+          break;
+        case "bmp":
+          mimeType = "image/bmp";
+          extension = "bmp";
+          break;
         case "gif":
           mimeType = "image/gif";
           extension = "gif";
@@ -158,16 +179,32 @@ export default function ConvertPage() {
           extension = "webp";
       }
 
+      const quality = (imageFormat === "png" || imageFormat === "bmp") ? undefined : imageQuality / 100;
       canvas.toBlob(
         (blob) => {
           if (blob) {
             downloadBlob(blob, `converted_${Date.now()}.${extension}`);
             toast.success("画像変換が完了しました");
+            setIsProcessing(false);
+          } else {
+            // Fallback for unsupported formats (AVIF/BMP in some browsers)
+            const fallbackMime = "image/webp";
+            const fallbackExt = "webp";
+            canvas.toBlob(
+              (fallbackBlob) => {
+                if (fallbackBlob) {
+                  downloadBlob(fallbackBlob, `converted_${Date.now()}.${fallbackExt}`);
+                  toast.warning(`${imageFormat.toUpperCase()}非対応のため、WebPで出力しました`);
+                }
+                setIsProcessing(false);
+              },
+              fallbackMime,
+              imageQuality / 100
+            );
           }
-          setIsProcessing(false);
         },
         mimeType,
-        imageFormat === "png" ? undefined : imageQuality / 100
+        quality
       );
     } catch (error) {
       console.error("Image conversion error:", error);
@@ -188,6 +225,9 @@ export default function ConvertPage() {
   const videoFormatOptions: { value: OutputFormat; label: string }[] = [
     { value: "mp4", label: "MP4 (H.264)" },
     { value: "webm", label: "WebM (VP9)" },
+    { value: "mov", label: "MOV" },
+    { value: "avi", label: "AVI" },
+    { value: "mkv", label: "MKV" },
     { value: "gif", label: "GIF" },
   ];
 
@@ -195,6 +235,8 @@ export default function ConvertPage() {
     { value: "webp", label: "WebP", description: "高圧縮・透過対応" },
     { value: "png", label: "PNG", description: "可逆圧縮・透過対応" },
     { value: "jpg", label: "JPG", description: "高圧縮・写真向け" },
+    { value: "avif", label: "AVIF", description: "最新高圧縮形式" },
+    { value: "bmp", label: "BMP", description: "非圧縮・互換性高" },
     { value: "gif", label: "GIF", description: "256色・透過対応" },
   ];
 
@@ -325,7 +367,7 @@ export default function ConvertPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   出力形式
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                   {videoFormatOptions.map(({ value, label }) => (
                     <button
                       key={value}

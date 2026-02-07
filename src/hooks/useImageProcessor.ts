@@ -485,7 +485,7 @@ export function useImageProcessor() {
   };
 
   const exportImage = useCallback(
-    async (format: "png" | "jpg" | "webp", quality: number = 0.9): Promise<Blob | null> => {
+    async (format: "png" | "jpg" | "webp" | "avif" | "bmp", quality: number = 0.9): Promise<Blob | null> => {
       if (!canvasRef.current) return null;
 
       setProcessingState({
@@ -495,22 +495,38 @@ export function useImageProcessor() {
       });
 
       try {
-        const mimeType =
-          format === "png"
-            ? "image/png"
-            : format === "jpg"
-            ? "image/jpeg"
-            : "image/webp";
+        const mimeTypeMap: Record<string, string> = {
+          png: "image/png",
+          jpg: "image/jpeg",
+          webp: "image/webp",
+          avif: "image/avif",
+          bmp: "image/bmp",
+        };
+        const mimeType = mimeTypeMap[format] || "image/webp";
+        const qualityArg = (format === "png" || format === "bmp") ? undefined : quality;
 
         return new Promise((resolve) => {
           canvasRef.current!.toBlob(
             (blob) => {
-              setProcessingState({ status: "complete", progress: 100 });
-              toast.success("画像のエクスポートが完了しました");
-              resolve(blob);
+              if (blob) {
+                setProcessingState({ status: "complete", progress: 100 });
+                toast.success("画像のエクスポートが完了しました");
+                resolve(blob);
+              } else {
+                // Fallback for unsupported formats (AVIF/BMP in some browsers)
+                canvasRef.current!.toBlob(
+                  (fallbackBlob) => {
+                    setProcessingState({ status: "complete", progress: 100 });
+                    toast.warning(`${format.toUpperCase()}非対応のため、WebPで出力しました`);
+                    resolve(fallbackBlob);
+                  },
+                  "image/webp",
+                  quality
+                );
+              }
             },
             mimeType,
-            quality
+            qualityArg
           );
         });
       } catch (error) {

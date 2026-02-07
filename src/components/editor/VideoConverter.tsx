@@ -54,6 +54,9 @@ export function VideoConverter() {
   const formatOptions: { value: OutputFormat; label: string }[] = [
     { value: "mp4", label: "MP4 (H.264)" },
     { value: "webm", label: "WebM (VP9)" },
+    { value: "mov", label: "MOV" },
+    { value: "avi", label: "AVI" },
+    { value: "mkv", label: "MKV" },
     { value: "gif", label: "GIF" },
   ];
 
@@ -119,7 +122,7 @@ export function VideoConverter() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               出力形式
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
               {formatOptions.map(({ value, label }) => (
                 <button
                   key={value}

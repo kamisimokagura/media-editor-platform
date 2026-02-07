@@ -35,7 +35,7 @@ export interface ProjectSettings {
   outputFormat: OutputFormat;
 }
 
-export type OutputFormat = "mp4" | "webm" | "gif" | "png" | "jpg";
+export type OutputFormat = "mp4" | "webm" | "gif" | "png" | "jpg" | "webp" | "avif" | "bmp" | "mov" | "avi" | "mkv";
 
 // Timeline Types
 export interface Timeline {
@@ -182,6 +182,14 @@ export const ALLOWED_VIDEO_TYPES = [
   "video/webm",
   "video/quicktime",
   "video/x-msvideo",
+  "video/x-matroska",
+  "video/x-flv",
+  "video/x-ms-wmv",
+  "video/mpeg",
+  "video/3gpp",
+  "video/mp2t",
+  "video/x-m4v",
+  "video/ogg",
 ];
 
 export const ALLOWED_IMAGE_TYPES = [
@@ -190,6 +198,24 @@ export const ALLOWED_IMAGE_TYPES = [
   "image/gif",
   "image/webp",
   "image/svg+xml",
+  "image/heic",
+  "image/heif",
+  "image/bmp",
+  "image/tiff",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+  "image/avif",
+  "image/x-canon-cr2",
+  "image/x-canon-cr3",
+  "image/x-nikon-nef",
+  "image/x-sony-arw",
+  "image/x-adobe-dng",
+  "image/x-panasonic-rw2",
+  "image/x-olympus-orf",
+  "image/x-fuji-raf",
+  "image/x-pentax-pef",
+  "image/x-samsung-srw",
+  "image/x-dcraw",
 ];
 
 export const ALLOWED_AUDIO_TYPES = [
@@ -197,6 +223,12 @@ export const ALLOWED_AUDIO_TYPES = [
   "audio/wav",
   "audio/ogg",
   "audio/webm",
+  "audio/aac",
+  "audio/flac",
+  "audio/mp4",
+  "audio/x-m4a",
+  "audio/aiff",
+  "audio/x-ms-wma",
 ];
 
 export const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB (FFmpeg WASM limit)

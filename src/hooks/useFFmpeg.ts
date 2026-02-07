@@ -119,6 +119,16 @@ export function useFFmpeg() {
         } else if (options.format === "mp4") {
           args.push("-c:v", "libx264");
           args.push("-c:a", "aac");
+        } else if (options.format === "mov") {
+          args.push("-c:v", "libx264");
+          args.push("-c:a", "aac");
+          args.push("-tag:v", "avc1");
+        } else if (options.format === "avi") {
+          args.push("-c:v", "libx264");
+          args.push("-c:a", "aac");
+        } else if (options.format === "mkv") {
+          args.push("-c:v", "libx264");
+          args.push("-c:a", "aac");
         } else if (options.format === "gif") {
           args.push("-vf", "fps=10,scale=320:-1:flags=lanczos");
         }
@@ -151,12 +161,15 @@ export function useFFmpeg() {
 
         // Read output file
         const data = await ffmpeg.readFile(outputName);
-        const mimeType =
-          options.format === "mp4"
-            ? "video/mp4"
-            : options.format === "webm"
-            ? "video/webm"
-            : "image/gif";
+        const mimeTypeMap: Record<string, string> = {
+          mp4: "video/mp4",
+          webm: "video/webm",
+          gif: "image/gif",
+          mov: "video/quicktime",
+          avi: "video/x-msvideo",
+          mkv: "video/x-matroska",
+        };
+        const mimeType = mimeTypeMap[options.format] || "video/mp4";
 
         const blob = fileDataToBlob(data, mimeType);
 
@@ -406,6 +419,84 @@ export function useFFmpeg() {
     [loadFFmpeg]
   );
 
+  const convertAudio = useCallback(
+    async (inputFile: File, format: string, quality?: number): Promise<Blob | null> => {
+      try {
+        const ffmpeg = await loadFFmpeg();
+        if (!ffmpeg) return null;
+
+        setProcessingState({
+          status: "processing",
+          progress: 0,
+          message: "音声を変換中...",
+        });
+
+        const ext = inputFile.name.split(".").pop() || "mp3";
+        const inputName = `input_${Date.now()}.${ext}`;
+        const outputName = `output_${Date.now()}.${format}`;
+
+        await ffmpeg.writeFile(inputName, await fetchFile(inputFile));
+
+        const args: string[] = ["-i", inputName];
+
+        switch (format) {
+          case "mp3":
+            args.push("-acodec", "libmp3lame", "-q:a", "2");
+            break;
+          case "aac":
+            args.push("-acodec", "aac", "-b:a", "192k");
+            break;
+          case "flac":
+            args.push("-acodec", "flac");
+            break;
+          case "wav":
+            args.push("-acodec", "pcm_s16le");
+            break;
+          case "ogg":
+            args.push("-acodec", "libvorbis", "-q:a", "6");
+            break;
+          case "m4a":
+            args.push("-acodec", "aac", "-b:a", "192k");
+            break;
+          default:
+            args.push("-acodec", "libmp3lame", "-q:a", "2");
+        }
+
+        args.push("-y", outputName);
+        await ffmpeg.exec(args);
+
+        const data = await ffmpeg.readFile(outputName);
+        const audioMimeMap: Record<string, string> = {
+          mp3: "audio/mpeg",
+          aac: "audio/aac",
+          flac: "audio/flac",
+          wav: "audio/wav",
+          ogg: "audio/ogg",
+          m4a: "audio/mp4",
+        };
+        const blob = fileDataToBlob(data, audioMimeMap[format] || "audio/mpeg");
+
+        await ffmpeg.deleteFile(inputName);
+        await ffmpeg.deleteFile(outputName);
+
+        setProcessingState({ status: "complete", progress: 100 });
+        toast.success("音声の変換が完了しました");
+
+        return blob;
+      } catch (error) {
+        console.error("Audio conversion error:", error);
+        setProcessingState({
+          status: "error",
+          progress: 0,
+          error: "音声の変換に失敗しました",
+        });
+        toast.error("音声の変換に失敗しました");
+        return null;
+      }
+    },
+    [loadFFmpeg, setProcessingState]
+  );
+
   return {
     isLoading,
     progress,
@@ -415,6 +506,7 @@ export function useFFmpeg() {
     trimVideo,
     mergeVideos,
     extractAudio,
+    convertAudio,
     generateThumbnail,
   };
 }

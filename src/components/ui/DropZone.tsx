@@ -46,8 +46,17 @@ export function DropZone({
       const validFiles: File[] = [];
 
       for (const file of files) {
-        // Check file type
-        if (!allowedTypes.includes(file.type)) {
+        // Check file type (with extension fallback for HEIC/RAW files)
+        const ext = file.name.split(".").pop()?.toLowerCase() || "";
+        const heicExtensions = ["heic", "heif"];
+        const rawExtensions = [
+          "cr2", "cr3", "nef", "nrw", "arw", "sr2", "srf", "dng", "rw2",
+          "orf", "raf", "pef", "srw", "raw", "3fr", "kdc", "dcr", "mrw",
+          "rwl", "x3f", "erf",
+        ];
+        const isAllowedByExt = heicExtensions.includes(ext) || rawExtensions.includes(ext);
+
+        if (!allowedTypes.includes(file.type) && !isAllowedByExt) {
           toast.error(`${file.name}: サポートされていないファイル形式です`);
           continue;
         }
@@ -116,7 +125,9 @@ export function DropZone({
     [validateFiles, onFilesSelected]
   );
 
-  const acceptString = getAllowedTypes().join(",");
+  // Build accept string with MIME types + file extensions for HEIC/RAW compatibility
+  const extraExtensions = accept === "video" ? "" : ",.heic,.heif,.cr2,.cr3,.nef,.nrw,.arw,.dng,.rw2,.orf,.raf,.pef,.srw,.raw";
+  const acceptString = getAllowedTypes().join(",") + (accept !== "audio" ? extraExtensions : "");
 
   return (
     <div
@@ -209,10 +220,10 @@ export function DropZone({
           </p>
 
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            {accept === "video" && "MP4, WebM, MOV, AVI"}
-            {accept === "image" && "PNG, JPG, GIF, WebP, SVG"}
-            {accept === "audio" && "MP3, WAV, OGG"}
-            {accept === "all" && "動画、画像、音声ファイル対応"}
+            {accept === "video" && "MP4, WebM, MOV, AVI, MKV, FLV, WMV, MPEG, 3GP等"}
+            {accept === "image" && "PNG, JPG, GIF, WebP, SVG, HEIC, RAW, BMP, TIFF, AVIF等"}
+            {accept === "audio" && "MP3, WAV, OGG, AAC, FLAC, M4A等"}
+            {accept === "all" && "動画・画像・音声ファイル対応（iOS写真・RAW含む）"}
           </p>
 
           {/* File size badge */}

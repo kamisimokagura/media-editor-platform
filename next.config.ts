@@ -28,9 +28,11 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [];
   },
+  // Exclude WASM-heavy packages from server bundling
+  serverExternalPackages: ["libraw-wasm"],
   // Optimize for client-side processing
   experimental: {
-    optimizePackageImports: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
+    optimizePackageImports: ["@ffmpeg/ffmpeg", "@ffmpeg/util", "heic2any"],
   },
   // Image optimization settings
   images: {

@@ -6,6 +6,8 @@ import { useImageProcessor } from "@/hooks/useImageProcessor";
 import { Button, Slider, DropZone, ProgressBar, Modal } from "@/components/ui";
 import { toast } from "@/stores/toastStore";
 import { v4 as uuidv4 } from "uuid";
+import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
+import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
 import type { MediaFile } from "@/types";
 
 type EditorTab = "adjust" | "crop" | "resize" | "filters" | "ai";
@@ -35,7 +37,7 @@ export function ImageEditor() {
   const [showExportModal, setShowExportModal] = useState(false);
 
   // Export settings
-  const [exportFormat, setExportFormat] = useState<"png" | "jpg" | "webp" | "gif">("webp");
+  const [exportFormat, setExportFormat] = useState<"png" | "jpg" | "webp" | "gif" | "avif" | "bmp">("webp");
   const [exportQuality, setExportQuality] = useState(90);
   const [exportWidth, setExportWidth] = useState(0);
   const [exportHeight, setExportHeight] = useState(0);
@@ -69,8 +71,20 @@ export function ImageEditor() {
   // Handle file selection
   const handleFilesSelected = useCallback(
     async (files: File[]) => {
-      const file = files[0];
-      if (!file || !file.type.startsWith("image/")) {
+      let file = files[0];
+      if (!file) {
+        toast.error("画像ファイルを選択してください");
+        return;
+      }
+
+      // HEIC/RAW変換
+      if (isHeicFile(file)) {
+        toast.info("HEIC画像を変換中...");
+        file = await ensureBrowserCompatibleImage(file);
+      } else if (isRawFile(file)) {
+        toast.info("RAW画像を変換中...");
+        file = await ensureBrowserCompatibleRawImage(file);
+      } else if (!file.type.startsWith("image/")) {
         toast.error("画像ファイルを選択してください");
         return;
       }
@@ -342,13 +356,19 @@ export function ImageEditor() {
 
     switch (exportFormat) {
       case "png":
-        size = pixels * 3 * 0.5; // Rough estimate with compression
+        size = pixels * 3 * 0.5;
         break;
       case "jpg":
         size = pixels * 3 * (exportQuality / 100) * 0.3;
         break;
       case "webp":
         size = pixels * 3 * (exportQuality / 100) * 0.2;
+        break;
+      case "avif":
+        size = pixels * 3 * (exportQuality / 100) * 0.15;
+        break;
+      case "bmp":
+        size = pixels * 3;
         break;
       case "gif":
         size = pixels * 0.5;
@@ -907,8 +927,8 @@ export function ImageEditor() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               フォーマット
             </label>
-            <div className="grid grid-cols-4 gap-2">
-              {(["png", "jpg", "webp", "gif"] as const).map((format) => (
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {(["png", "jpg", "webp", "avif", "bmp", "gif"] as const).map((format) => (
                 <button
                   key={format}
                   onClick={() => setExportFormat(format)}
@@ -926,12 +946,14 @@ export function ImageEditor() {
               {exportFormat === "png" && "可逆圧縮・透過対応。ロゴやイラストに最適"}
               {exportFormat === "jpg" && "高圧縮・写真向け。透過非対応"}
               {exportFormat === "webp" && "最新形式・高圧縮・透過対応。Web表示に最適"}
+              {exportFormat === "avif" && "最新高圧縮形式。Chrome対応。最小ファイルサイズ"}
+              {exportFormat === "bmp" && "非圧縮ビットマップ。互換性が高い"}
               {exportFormat === "gif" && "アニメーション対応。256色制限あり"}
             </p>
           </div>
 
-          {/* Quality slider (not for PNG) */}
-          {exportFormat !== "png" && (
+          {/* Quality slider (not for PNG/BMP) */}
+          {exportFormat !== "png" && exportFormat !== "bmp" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 品質: {exportQuality}%
