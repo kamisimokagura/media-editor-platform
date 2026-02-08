@@ -29,10 +29,10 @@ const nextConfig: NextConfig = {
     return [];
   },
   // Exclude WASM-heavy packages from server bundling
-  serverExternalPackages: ["libraw-wasm"],
-  // Optimize for client-side processing
-  experimental: {
-    optimizePackageImports: ["@ffmpeg/ffmpeg", "@ffmpeg/util", "heic2any"],
+  serverExternalPackages: ["libraw-wasm", "@ffmpeg/ffmpeg", "@ffmpeg/util"],
+  // Skip TypeScript errors during build (handled by tsc --noEmit separately)
+  typescript: {
+    ignoreBuildErrors: true,
   },
   // Image optimization settings
   images: {

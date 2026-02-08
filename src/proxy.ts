@@ -41,15 +41,15 @@ function checkRateLimit(request: NextRequest): boolean {
   return true;
 }
 
-// Clean up old rate limit entries periodically
-setInterval(() => {
+// Clean up old rate limit entries on each request (avoids setInterval which blocks build)
+function cleanupRateLimits() {
   const now = Date.now();
   for (const [key, record] of rateLimitMap.entries()) {
     if (now > record.resetTime) {
       rateLimitMap.delete(key);
     }
   }
-}, RATE_LIMIT_WINDOW);
+}
 
 export async function proxy(request: NextRequest) {
   // Skip static files and API routes that handle their own security
@@ -59,6 +59,9 @@ export async function proxy(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
+
+  // Clean up expired rate limit entries
+  cleanupRateLimits();
 
   // Rate limiting
   if (!checkRateLimit(request)) {
