@@ -6,8 +6,9 @@ import { useFFmpeg } from "@/hooks/useFFmpeg";
 import { useEditorStore } from "@/stores/editorStore";
 import { Button, DropZone, ProgressBar, Slider } from "@/components/ui";
 import { toast } from "@/stores/toastStore";
-import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
-import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
+// TODO: Re-enable when CDN-based loading is implemented (heic2any/libraw-wasm cause Turbopack build hang)
+// import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
+// import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
 import type { ConversionOptions, OutputFormat } from "@/types";
 
 type MediaMode = "video" | "image";
@@ -47,16 +48,17 @@ export default function ConvertPage() {
       if (files.length > 0) {
         let file = files[0];
 
-        // HEIC/RAW変換
-        if (isHeicFile(file)) {
-          toast.info("HEIC画像を変換中...");
-          file = await ensureBrowserCompatibleImage(file);
-          setMode("image");
-        } else if (isRawFile(file)) {
-          toast.info("RAW画像を変換中...");
-          file = await ensureBrowserCompatibleRawImage(file);
-          setMode("image");
-        } else if (file.type.startsWith("video/")) {
+        // TODO: Re-enable HEIC/RAW support when CDN-based loading is implemented
+        // if (isHeicFile(file)) {
+        //   toast.info("HEIC画像を変換中...");
+        //   file = await ensureBrowserCompatibleImage(file);
+        //   setMode("image");
+        // } else if (isRawFile(file)) {
+        //   toast.info("RAW画像を変換中...");
+        //   file = await ensureBrowserCompatibleRawImage(file);
+        //   setMode("image");
+        // } else
+        if (file.type.startsWith("video/")) {
           setMode("video");
         } else if (file.type.startsWith("image/")) {
           setMode("image");

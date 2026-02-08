@@ -28,11 +28,9 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [];
   },
-  // Exclude WASM-heavy packages from server bundling
-  serverExternalPackages: ["libraw-wasm", "@ffmpeg/ffmpeg", "@ffmpeg/util"],
-  // Skip TypeScript errors during build (handled by tsc --noEmit separately)
-  typescript: {
-    ignoreBuildErrors: true,
+  // Optimize for client-side processing
+  experimental: {
+    optimizePackageImports: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
   // Image optimization settings
   images: {

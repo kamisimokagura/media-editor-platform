@@ -6,8 +6,9 @@ import { useImageProcessor } from "@/hooks/useImageProcessor";
 import { Button, Slider, DropZone, ProgressBar, Modal } from "@/components/ui";
 import { toast } from "@/stores/toastStore";
 import { v4 as uuidv4 } from "uuid";
-import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
-import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
+// TODO: Re-enable when CDN-based loading is implemented (heic2any/libraw-wasm cause Turbopack build hang)
+// import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
+// import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
 import type { MediaFile } from "@/types";
 
 type EditorTab = "adjust" | "crop" | "resize" | "filters" | "ai";
@@ -77,14 +78,15 @@ export function ImageEditor() {
         return;
       }
 
-      // HEIC/RAW変換
-      if (isHeicFile(file)) {
-        toast.info("HEIC画像を変換中...");
-        file = await ensureBrowserCompatibleImage(file);
-      } else if (isRawFile(file)) {
-        toast.info("RAW画像を変換中...");
-        file = await ensureBrowserCompatibleRawImage(file);
-      } else if (!file.type.startsWith("image/")) {
+      // TODO: Re-enable HEIC/RAW support when CDN-based loading is implemented
+      // if (isHeicFile(file)) {
+      //   toast.info("HEIC画像を変換中...");
+      //   file = await ensureBrowserCompatibleImage(file);
+      // } else if (isRawFile(file)) {
+      //   toast.info("RAW画像を変換中...");
+      //   file = await ensureBrowserCompatibleRawImage(file);
+      // } else
+      if (!file.type.startsWith("image/")) {
         toast.error("画像ファイルを選択してください");
         return;
       }

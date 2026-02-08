@@ -8,8 +8,9 @@ import { useEditorStore } from "@/stores/editorStore";
 import { useFFmpeg } from "@/hooks/useFFmpeg";
 import { toast } from "@/stores/toastStore";
 import { v4 as uuidv4 } from "uuid";
-import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
-import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
+// TODO: Re-enable when CDN-based loading is implemented (heic2any/libraw-wasm cause Turbopack build hang)
+// import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
+// import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
 import type { MediaFile, MediaType } from "@/types";
 
 export default function EditorPage() {
@@ -54,14 +55,14 @@ export default function EditorPage() {
   const handleFilesSelected = useCallback(
     async (files: File[]) => {
       for (let file of files) {
-        // HEIC/RAW変換
-        if (isHeicFile(file)) {
-          toast.info("HEIC画像を変換中...");
-          file = await ensureBrowserCompatibleImage(file);
-        } else if (isRawFile(file)) {
-          toast.info("RAW画像を変換中...");
-          file = await ensureBrowserCompatibleRawImage(file);
-        }
+        // TODO: Re-enable HEIC/RAW support when CDN-based loading is implemented
+        // if (isHeicFile(file)) {
+        //   toast.info("HEIC画像を変換中...");
+        //   file = await ensureBrowserCompatibleImage(file);
+        // } else if (isRawFile(file)) {
+        //   toast.info("RAW画像を変換中...");
+        //   file = await ensureBrowserCompatibleRawImage(file);
+        // }
 
         const mediaType: MediaType = file.type.startsWith("video/")
           ? "video"
