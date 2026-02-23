@@ -1,0 +1,16 @@
+
+> media-editor-platform@0.1.0 dev
+> next dev -p 3000
+
+▲ Next.js 16.1.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.8.213:3000
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+✓ Starting...
+✓ Ready in 897ms
+ GET /contact 200 in 43ms (compile: 3ms, proxy.ts: 7ms, render: 33ms)
+ POST /api/contact 200 in 591ms (compile: 161ms, proxy.ts: 5ms, render: 425ms)
+^C
