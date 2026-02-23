@@ -40,4 +40,8 @@ jobs:
       - name: Run App Guard (CI policy)
         env:
           CI: "true"
+          # CI用ダミー値: build-time参照で必須だが実運用シークレットは不要
+          NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "ci-anon-key"
+          NEXTAUTH_SECRET: "ci-nextauth-secret"
         run: npm run guard:ci
