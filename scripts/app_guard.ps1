@@ -9,9 +9,34 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $AppRoot = Split-Path -Parent $PSScriptRoot
-$NpmExe = "npm.cmd"
-$NpxExe = "npx.cmd"
 $script:Results = @()
+
+function Resolve-Executable {
+  param(
+    [string[]]$Candidates,
+    [string]$ToolName
+  )
+
+  foreach ($candidate in $Candidates) {
+    $command = Get-Command $candidate -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($null -ne $command) {
+      if ($command.Source) {
+        return $command.Source
+      }
+      return $command.Name
+    }
+  }
+
+  throw "Required tool '$ToolName' is not available. Tried: $($Candidates -join ', ')"
+}
+
+if ($IsWindows) {
+  $NpmExe = Resolve-Executable -Candidates @("npm.cmd", "npm") -ToolName "npm"
+  $NpxExe = Resolve-Executable -Candidates @("npx.cmd", "npx") -ToolName "npx"
+} else {
+  $NpmExe = Resolve-Executable -Candidates @("npm", "npm.cmd") -ToolName "npm"
+  $NpxExe = Resolve-Executable -Candidates @("npx", "npx.cmd") -ToolName "npx"
+}
 
 if ($AuditPolicy -eq "balanced" -and $env:CI -and $env:CI.ToLowerInvariant() -eq "true") {
   $AuditPolicy = "strict"
