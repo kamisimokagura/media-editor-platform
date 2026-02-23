@@ -27,7 +27,7 @@ export function DropZone({
 }: DropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
 
-  const getAllowedTypes = () => {
+  const getAllowedTypes = useCallback(() => {
     switch (accept) {
       case "video":
         return ALLOWED_VIDEO_TYPES;
@@ -38,7 +38,7 @@ export function DropZone({
       default:
         return [...ALLOWED_VIDEO_TYPES, ...ALLOWED_IMAGE_TYPES, ...ALLOWED_AUDIO_TYPES];
     }
-  };
+  }, [accept]);
 
   const validateFiles = useCallback(
     (files: File[]): File[] => {
@@ -79,7 +79,7 @@ export function DropZone({
 
       return validFiles;
     },
-    [accept, maxFiles]
+    [getAllowedTypes, maxFiles]
   );
 
   const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
@@ -135,7 +135,7 @@ export function DropZone({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`
-        relative isolate group cursor-pointer overflow-hidden w-full
+        relative isolate group cursor-pointer overflow-hidden w-full box-border
         border-2 border-dashed rounded-2xl
         transition-all duration-300 ease-out
         bg-white dark:bg-dark-800

@@ -9,9 +9,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "guard:check": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/app_guard.ps1 -Mode check -AuditPolicy balanced",
-    "guard:ci": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/app_guard.ps1 -Mode check -AuditPolicy strict",
-    "guard:protect:dryrun": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/set_branch_protection.ps1 -Repository \"kamisimokagura/media-editor-platform\" -Branch \"main\" -RequiredCheck \"App Guard CI / guard\" -DryRun"
+    "guard:check": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/app_guard.ps1 -Mode check -AuditPolicy balanced",
+    "guard:ci": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/app_guard.ps1 -Mode check -AuditPolicy strict",
+    "guard:protect:dryrun": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/set_branch_protection.ps1 -Repository \"kamisimokagura/media-editor-platform\" -Branch \"main\" -RequiredCheck \"App Guard CI / guard\" -DryRun"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",

@@ -49,7 +49,7 @@ function inferVercelOrigin(): string | null {
     return null;
   }
 
-  if (vercelHost.startsWith("http://") || vercelHost.startsWith("https://")) {
+  if (vercelHost.includes("://")) {
     return normalizeOrigin(vercelHost);
   }
 

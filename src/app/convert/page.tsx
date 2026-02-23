@@ -409,7 +409,7 @@ export default function ConvertPage() {
                 accept={mode === "video" ? "video" : "image"}
                 multiple={true}
                 maxFiles={20}
-                className={`w-full ${queue.length > 0 ? "min-h-[120px] !py-5" : "min-h-[280px] !py-10"}`}
+                className={`w-full max-w-full ${queue.length > 0 ? "min-h-[120px]" : "min-h-[280px]"}`}
               />
             </div>
 

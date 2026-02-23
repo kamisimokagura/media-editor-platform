@@ -123,36 +123,53 @@ export function ImageEditor({
     undoImageAdjustment,
     processingState,
     addMediaFile,
+    mediaFiles,
     originalImageData,
     historyIndex,
   } = useEditorStore();
 
   const { initCanvas, applyAdjustments, exportImage, resizeImage, cropImage } = useImageProcessor();
+  const imageFiles = mediaFiles.filter((file) => file.type === "image");
 
   // Handle file selection
   const handleFilesSelected = useCallback(
     async (files: File[]) => {
-      let file = files[0];
-      if (!file) {
+      if (!files.length) {
         toast.error("画像ファイルを選択してください");
         return;
       }
 
-      if (isHeicFile(file)) {
-        toast.info("Converting HEIC image...");
-        file = await ensureBrowserCompatibleImage(file);
-      } else if (isRawFile(file)) {
-        toast.info("Converting RAW image...");
-        file = await ensureBrowserCompatibleRawImage(file);
-      } else if (!file.type.startsWith("image/")) {
-        toast.error("画像ファイルを選択してください");
-        return;
-      }
+      const uploadedImages: MediaFile[] = [];
 
-      const url = URL.createObjectURL(file);
+      for (const rawFile of files) {
+        let file = rawFile;
 
-      const img = new Image();
-      img.onload = () => {
+        if (isHeicFile(file)) {
+          toast.info(`${file.name}: HEIC変換中...`);
+          file = await ensureBrowserCompatibleImage(file);
+        } else if (isRawFile(file)) {
+          toast.info(`${file.name}: RAW変換中...`);
+          file = await ensureBrowserCompatibleRawImage(file);
+        } else if (!file.type.startsWith("image/")) {
+          toast.error(`${file.name}: 画像ファイルを選択してください`);
+          continue;
+        }
+
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.src = url;
+
+        const loaded = await new Promise<boolean>((resolve) => {
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+        });
+
+        if (!loaded) {
+          URL.revokeObjectURL(url);
+          toast.error(`${file.name}: 読み込みに失敗しました`);
+          continue;
+        }
+
         const mediaFile: MediaFile = {
           id: uuidv4(),
           name: file.name,
@@ -167,12 +184,7 @@ export function ImageEditor({
         };
 
         addMediaFile(mediaFile);
-        setCurrentImage(mediaFile);
-        setImageLoaded(false);
-        setExportWidth(img.naturalWidth);
-        setExportHeight(img.naturalHeight);
-        setResizeWidth(img.naturalWidth);
-        setResizeHeight(img.naturalHeight);
+        uploadedImages.push(mediaFile);
 
         void trackClientEvent({
           eventName: ANALYTICS_EVENTS.FILE_SELECTED,
@@ -183,10 +195,36 @@ export function ImageEditor({
             file_size_bytes: file.size,
           },
         });
-      };
-      img.src = url;
+      }
+
+      if (!uploadedImages.length) {
+        toast.error("画像ファイルを読み込めませんでした");
+        return;
+      }
+
+      const firstImage = uploadedImages[0];
+      setCurrentImage(firstImage);
+      setImageLoaded(false);
+      setExportWidth(firstImage.width || 0);
+      setExportHeight(firstImage.height || 0);
+      setResizeWidth(firstImage.width || 0);
+      setResizeHeight(firstImage.height || 0);
+
+      if (uploadedImages.length > 1) {
+        toast.success(`${uploadedImages.length}枚を追加しました。編集は1枚ずつ切り替えて行えます。`);
+      }
     },
     [addMediaFile, setCurrentImage]
+  );
+
+  const handleSelectImage = useCallback(
+    (image: MediaFile) => {
+      if (currentImage?.id === image.id) return;
+      setCurrentImage(image);
+      setImageLoaded(false);
+      setIsMobilePanelOpen(false);
+    },
+    [currentImage?.id, setCurrentImage]
   );
 
   // Initialize canvas when image loads
@@ -294,6 +332,18 @@ export function ImageEditor({
   const handleApplyResize = async () => {
     await resizeImage(resizeWidth, resizeHeight, false);
     applyAdjustments(imageAdjustments);
+  };
+
+  const handleFullReset = () => {
+    fullResetImage();
+    setCropRect({ x: 0, y: 0, width: 0, height: 0 });
+    setMosaicMode(false);
+    if (mosaicCanvasRef.current) {
+      const ctx = mosaicCanvasRef.current.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(0, 0, mosaicCanvasRef.current.width, mosaicCanvasRef.current.height);
+      }
+    }
   };
 
   // Apply preset filter with intensity
@@ -702,15 +752,15 @@ export function ImageEditor({
               />
 
               {/* Crop overlay */}
-              {cropMode && cropRect.width > 0 && cropRect.height > 0 && canvasRef.current && (
+              {cropMode && cropRect.width > 0 && cropRect.height > 0 && originalImageData && (
                 <div
                   ref={cropOverlayRef}
                   className="absolute border-2 border-white border-dashed bg-black/30 pointer-events-none"
                   style={{
-                    left: `${(cropRect.x / canvasRef.current.width) * 100}%`,
-                    top: `${(cropRect.y / canvasRef.current.height) * 100}%`,
-                    width: `${(cropRect.width / canvasRef.current.width) * 100}%`,
-                    height: `${(cropRect.height / canvasRef.current.height) * 100}%`,
+                    left: `${(cropRect.x / originalImageData.width) * 100}%`,
+                    top: `${(cropRect.y / originalImageData.height) * 100}%`,
+                    width: `${(cropRect.width / originalImageData.width) * 100}%`,
+                    height: `${(cropRect.height / originalImageData.height) * 100}%`,
                   }}
                 >
                   {/* Corner handles */}
@@ -744,11 +794,56 @@ export function ImageEditor({
             <DropZone
               onFilesSelected={handleFilesSelected}
               accept="image"
-              multiple={false}
+              multiple={true}
+              maxFiles={30}
               className="w-full max-w-lg"
             />
           )}
         </div>
+
+        {currentImage && imageFiles.length > 1 && (
+          <div className="bg-white dark:bg-dark-800 border-t border-gray-200 dark:border-dark-700 px-3 sm:px-5 lg:px-6 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+                画像キュー ({imageFiles.length}枚)
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                編集対象: {currentImage.name}
+              </p>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {imageFiles.map((file) => (
+                <button
+                  key={file.id}
+                  onClick={() => handleSelectImage(file)}
+                  className={`flex items-center gap-2 min-w-[180px] p-2 rounded-xl border transition-colors ${
+                    currentImage.id === file.id
+                      ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+                      : "border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-700 hover:border-primary-400"
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 dark:bg-dark-600 flex-shrink-0">
+                    {file.url ? (
+                      <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs">
+                        IMG
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 text-left">
+                    <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate" title={file.name}>
+                      {file.name}
+                    </p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                      {file.width && file.height ? `${file.width}x${file.height}` : "画像"}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Bottom toolbar - responsive */}
         {currentImage && (
@@ -868,7 +963,7 @@ export function ImageEditor({
                   </svg>
                   <span className="hidden sm:inline">戻す</span>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={fullResetImage}>
+                <Button variant="ghost" size="sm" onClick={handleFullReset}>
                   <span className="hidden sm:inline">リセット</span>
                   <span className="sm:hidden text-xs">Reset</span>
                 </Button>

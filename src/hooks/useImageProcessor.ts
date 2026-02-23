@@ -308,7 +308,6 @@ export function useImageProcessor() {
       if (!canvasRef.current || !ctxRef.current || !originalImageData) return;
 
       const canvas = canvasRef.current;
-      const ctx = ctxRef.current;
 
       // Create a copy of the original image data
       const newImageData = new ImageData(
@@ -434,6 +433,18 @@ export function useImageProcessor() {
         applyGrain(newImageData, adjustments.grain);
       }
 
+      // Keep canvas dimensions in sync with source data so full reset can restore size after crop/resize.
+      if (canvas.width !== newImageData.width || canvas.height !== newImageData.height) {
+        canvas.width = newImageData.width;
+        canvas.height = newImageData.height;
+        const resizedCtx = canvas.getContext("2d", { willReadFrequently: true });
+        if (!resizedCtx) return;
+        ctxRef.current = resizedCtx;
+      }
+
+      const ctx = ctxRef.current;
+      if (!ctx) return;
+
       // Clear canvas and apply transformations
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
@@ -455,7 +466,7 @@ export function useImageProcessor() {
       const tempCtx = tempCanvas.getContext("2d");
       if (tempCtx) {
         tempCtx.putImageData(newImageData, 0, 0);
-        ctx.drawImage(tempCanvas, -canvas.width / 2, -canvas.height / 2);
+        ctx.drawImage(tempCanvas, -newImageData.width / 2, -newImageData.height / 2);
       }
 
       ctx.restore();
