@@ -38,6 +38,12 @@ if ($IsWindows) {
   $NpxExe = Resolve-Executable -Candidates @("npx", "npx.cmd") -ToolName "npx"
 }
 
+$rgCommand = Get-Command rg -ErrorAction SilentlyContinue | Select-Object -First 1
+$script:RgExe = $null
+if ($null -ne $rgCommand) {
+  $script:RgExe = if ($rgCommand.Source) { $rgCommand.Source } else { $rgCommand.Name }
+}
+
 if ($AuditPolicy -eq "balanced" -and $env:CI -and $env:CI.ToLowerInvariant() -eq "true") {
   $AuditPolicy = "strict"
 }
@@ -121,13 +127,82 @@ function Invoke-BuildCheck {
   Add-Result -Id "quality.build" -Status "fail" -Message "npm run build failed. ExitCode=$code $preview"
 }
 
-function Check-HardcodedHttp {
-  Push-Location $AppRoot
-  try {
-    $hits = @(& rg -n --glob "!node_modules/**" --glob "!.next/**" --glob "!public/vendor/**" "http://" "src" 2>$null)
-  } finally {
-    Pop-Location
+function Format-SearchMatch {
+  param(
+    [Microsoft.PowerShell.Commands.MatchInfo]$Match
+  )
+
+  $relativePath = $Match.Path
+  if ($relativePath.StartsWith($AppRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    $relativePath = $relativePath.Substring($AppRoot.Length).TrimStart("\", "/")
   }
+  return "${relativePath}:$($Match.LineNumber):$($Match.Line.Trim())"
+}
+
+function Invoke-TextSearchSimple {
+  param(
+    [string]$Needle,
+    [string]$SearchRoot
+  )
+
+  if ($script:RgExe) {
+    Push-Location $AppRoot
+    try {
+      return @(& $script:RgExe -n --glob "!node_modules/**" --glob "!.next/**" --glob "!public/vendor/**" $Needle $SearchRoot 2>$null)
+    } finally {
+      Pop-Location
+    }
+  }
+
+  $targetPath = Join-Path $AppRoot $SearchRoot
+  if (-not (Test-Path $targetPath)) {
+    return @()
+  }
+
+  $matches = Get-ChildItem -Path $targetPath -Recurse -File |
+    Where-Object {
+      $_.FullName -notmatch "[/\\]node_modules[/\\]" -and
+      $_.FullName -notmatch "[/\\]\.next[/\\]" -and
+      $_.FullName -notmatch "[/\\]public[/\\]vendor[/\\]"
+    } |
+    Select-String -Pattern $Needle -SimpleMatch
+
+  return @($matches | ForEach-Object { Format-SearchMatch -Match $_ })
+}
+
+function Invoke-TextSearchRegex {
+  param(
+    [string]$Pattern,
+    [string]$SearchRoot
+  )
+
+  if ($script:RgExe) {
+    Push-Location $AppRoot
+    try {
+      return @(& $script:RgExe -n --glob "!node_modules/**" --glob "!.next/**" --glob "!public/vendor/**" $Pattern $SearchRoot 2>$null)
+    } finally {
+      Pop-Location
+    }
+  }
+
+  $targetPath = Join-Path $AppRoot $SearchRoot
+  if (-not (Test-Path $targetPath)) {
+    return @()
+  }
+
+  $matches = Get-ChildItem -Path $targetPath -Recurse -File |
+    Where-Object {
+      $_.FullName -notmatch "[/\\]node_modules[/\\]" -and
+      $_.FullName -notmatch "[/\\]\.next[/\\]" -and
+      $_.FullName -notmatch "[/\\]public[/\\]vendor[/\\]"
+    } |
+    Select-String -Pattern $Pattern
+
+  return @($matches | ForEach-Object { Format-SearchMatch -Match $_ })
+}
+
+function Check-HardcodedHttp {
+  $hits = Invoke-TextSearchSimple -Needle "http://" -SearchRoot "src"
 
   if (-not $hits -or $hits.Count -eq 0) {
     Add-Result -Id "security.http_literal" -Status "pass" -Message "No http:// literals found in src."
@@ -179,12 +254,7 @@ function Check-OriginHandling {
     Add-Result -Id "security.origin_helper_usage" -Status "fail" -Message ("Missing origin safety helper usage in: " + ($missing -join ", "))
   }
 
-  Push-Location $AppRoot
-  try {
-    $rawOriginReads = @(& rg -n --glob "!node_modules/**" --glob "!.next/**" 'headers\.get\("origin"\)' "src/app/api" 2>$null)
-  } finally {
-    Pop-Location
-  }
+  $rawOriginReads = Invoke-TextSearchRegex -Pattern 'headers\.get\("origin"\)' -SearchRoot "src/app/api"
 
   if (-not $rawOriginReads -or $rawOriginReads.Count -eq 0) {
     Add-Result -Id "security.raw_origin_reads" -Status "pass" -Message "No direct origin header reads in API routes."
