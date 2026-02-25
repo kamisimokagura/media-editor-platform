@@ -50,6 +50,24 @@ function sanitizeCallbackPath(path: string | undefined): string {
   return trimmed;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message;
+  }
+  return "";
+}
+
+function isSessionMissingError(error: unknown): boolean {
+  const message = getErrorMessage(error).toLowerCase();
+  return message.includes("session") && message.includes("missing");
+}
+
 function buildAuthCallbackUrl(callbackPath?: string): string {
   const browserOrigin = window.location.origin;
   const envOrigin = normalizeOrigin(process.env.NEXT_PUBLIC_APP_URL);
@@ -217,17 +235,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    const signOutErrors: unknown[] = [];
+
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok && response.status !== 401) {
+        signOutErrors.push(new Error(`Logout API failed (${response.status})`));
+      }
+    } catch (error) {
+      signOutErrors.push(error);
+    }
+
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
+      if (error && !isSessionMissingError(error)) {
+        signOutErrors.push(error);
       }
+    } catch (error) {
+      if (!isSessionMissingError(error)) {
+        signOutErrors.push(error);
+      }
+    } finally {
       setUser(null);
       setDbUser(null);
       setSession(null);
-    } catch (error) {
-      console.error("Sign out error:", error);
-      throw error;
+    }
+
+    if (signOutErrors.length > 0) {
+      console.error("Sign out completed with non-fatal errors:", signOutErrors);
     }
   };
 

@@ -26,6 +26,8 @@ const cspDirectives: Record<string, string[]> = {
   "frame-ancestors": ["'none'"],
   "base-uri": ["'self'"],
   "form-action": ["'self'"],
+  "report-uri": ["/api/csp-report"],
+  "report-to": ["csp-endpoint"],
 };
 
 const cspHeader = Object.entries(cspDirectives)
@@ -73,6 +75,15 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
+          },
+          // Reporting API endpoint group for CSP report-to
+          {
+            key: "Report-To",
+            value: JSON.stringify({
+              group: "csp-endpoint",
+              max_age: 86400,
+              endpoints: [{ url: "/api/csp-report" }],
+            }),
           },
         ],
       },

@@ -235,8 +235,8 @@ export function createRateLimiter(maxRequests: number, windowMs: number) {
 export const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
   "script-src": ["'self'", "'unsafe-eval'", "https://js.stripe.com"], // unsafe-eval needed for FFmpeg.wasm
-  "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-  "font-src": ["'self'", "https://fonts.gstatic.com"],
+  "style-src": ["'self'", "'unsafe-inline'"],
+  "font-src": ["'self'"],
   "img-src": ["'self'", "blob:", "data:"],
   "media-src": ["'self'", "blob:"],
   "connect-src": [
@@ -253,6 +253,8 @@ export const CSP_DIRECTIVES = {
   "frame-ancestors": ["'none'"],
   "base-uri": ["'self'"],
   "form-action": ["'self'"],
+  "report-uri": ["/api/csp-report"],
+  "report-to": ["csp-endpoint"],
 };
 
 export function generateCSPHeader(): string {
@@ -260,3 +262,13 @@ export function generateCSPHeader(): string {
     .map(([key, values]) => `${key} ${values.join(" ")}`)
     .join("; ");
 }
+
+/**
+ * Report-To header value for the Reporting API.
+ * Defines the endpoint group that CSP report-to references.
+ */
+export const REPORT_TO_HEADER = JSON.stringify({
+  group: "csp-endpoint",
+  max_age: 86400,
+  endpoints: [{ url: "/api/csp-report" }],
+});

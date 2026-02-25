@@ -41,6 +41,7 @@ export function Header() {
     setIsUserMenuOpen(false);
     setIsMobileMenuOpen(false);
     await signOut();
+    router.refresh();
     router.push("/");
   };
 

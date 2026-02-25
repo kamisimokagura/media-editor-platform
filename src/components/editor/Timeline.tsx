@@ -12,6 +12,7 @@ export function Timeline() {
     trackId: string;
     startX: number;
     originalStartTime: number;
+    pointerId: number;
   } | null>(null);
 
   const {
@@ -32,9 +33,10 @@ export function Timeline() {
   const pixelsPerSecond = 50 * zoom;
 
   // Handle timeline click for seeking
-  const handleTimelineClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleTimelinePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
       if (!timelineRef.current || isDragging) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
 
       const rect = timelineRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -46,7 +48,9 @@ export function Timeline() {
 
   // Handle clip drag start
   const handleClipDragStart = useCallback(
-    (e: React.MouseEvent, trackId: string, clip: Clip) => {
+    (e: React.PointerEvent<HTMLDivElement>, trackId: string, clip: Clip) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      e.preventDefault();
       e.stopPropagation();
       setIsDragging(true);
       setDragInfo({
@@ -54,6 +58,7 @@ export function Timeline() {
         trackId,
         startX: e.clientX,
         originalStartTime: clip.startTime,
+        pointerId: e.pointerId,
       });
       selectClip(clip.id);
     },
@@ -64,7 +69,8 @@ export function Timeline() {
   useEffect(() => {
     if (!isDragging || !dragInfo) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (e.pointerId !== dragInfo.pointerId) return;
       const deltaX = e.clientX - dragInfo.startX;
       const deltaTime = deltaX / pixelsPerSecond;
       const newStartTime = Math.max(0, dragInfo.originalStartTime + deltaTime);
@@ -72,17 +78,20 @@ export function Timeline() {
       updateClip(dragInfo.trackId, dragInfo.clipId, { startTime: newStartTime });
     };
 
-    const handleMouseUp = () => {
+    const handlePointerEnd = (e: PointerEvent) => {
+      if (e.pointerId !== dragInfo.pointerId) return;
       setIsDragging(false);
       setDragInfo(null);
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerEnd);
+    window.addEventListener("pointercancel", handlePointerEnd);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerEnd);
+      window.removeEventListener("pointercancel", handlePointerEnd);
     };
   }, [isDragging, dragInfo, pixelsPerSecond, updateClip]);
 
@@ -290,7 +299,7 @@ export function Timeline() {
             </div>
 
             {/* Tracks */}
-            <div className="relative" onClick={handleTimelineClick}>
+            <div className="relative touch-none" onPointerDown={handleTimelinePointerDown}>
               {/* Playhead */}
               <div
                 className="absolute top-0 bottom-0 w-px bg-red-500 z-20 pointer-events-none"
@@ -326,7 +335,7 @@ interface TrackRowProps {
   track: Track;
   pixelsPerSecond: number;
   selectedClipId: string | null;
-  onClipDragStart: (e: React.MouseEvent, trackId: string, clip: Clip) => void;
+  onClipDragStart: (e: React.PointerEvent<HTMLDivElement>, trackId: string, clip: Clip) => void;
   onClipSelect: (clipId: string | null) => void;
   onClipRemove: (clipId: string) => void;
 }
@@ -347,7 +356,7 @@ function TrackRow({
         <div
           key={clip.id}
           className={`
-            absolute top-1 bottom-1 rounded cursor-move
+            absolute top-1 bottom-1 rounded cursor-move touch-none
             ${trackColor}
             ${
               selectedClipId === clip.id
@@ -359,7 +368,7 @@ function TrackRow({
             left: clip.startTime * pixelsPerSecond,
             width: Math.max(clip.duration * pixelsPerSecond, 20),
           }}
-          onMouseDown={(e) => onClipDragStart(e, track.id, clip)}
+          onPointerDown={(e) => onClipDragStart(e, track.id, clip)}
           onClick={(e) => {
             e.stopPropagation();
             onClipSelect(clip.id);
@@ -376,6 +385,9 @@ function TrackRow({
           {/* Delete button */}
           {selectedClipId === clip.id && (
             <button
+              onPointerDown={(e) => {
+                e.stopPropagation();
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 onClipRemove(clip.id);
