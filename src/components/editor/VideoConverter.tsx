@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import { useFFmpeg } from "@/hooks/useFFmpeg";
 import { useEditorStore } from "@/stores/editorStore";
 import { Button, DropZone, ProgressBar, Slider } from "@/components/ui";
-import { toast } from "@/stores/toastStore";
 import type { ConversionOptions, OutputFormat } from "@/types";
 
 export function VideoConverter() {
@@ -14,7 +13,7 @@ export function VideoConverter() {
     quality: 80,
   });
 
-  const { convertVideo, trimVideo, extractAudio, isLoading, progress, ffmpegLoaded } =
+  const { convertVideo, extractAudio, isLoading, ffmpegLoaded } =
     useFFmpeg();
   const { processingState } = useEditorStore();
 
@@ -29,7 +28,8 @@ export function VideoConverter() {
 
     const blob = await convertVideo(selectedFile, options);
     if (blob) {
-      downloadBlob(blob, `converted_${Date.now()}.${options.format}`);
+      const baseName = selectedFile.name.replace(/\.[^/.]+$/, "");
+      downloadBlob(blob, `${baseName}_converted.${options.format}`);
     }
   };
 
@@ -38,7 +38,8 @@ export function VideoConverter() {
 
     const blob = await extractAudio(selectedFile);
     if (blob) {
-      downloadBlob(blob, `audio_${Date.now()}.mp3`);
+      const baseName = selectedFile.name.replace(/\.[^/.]+$/, "");
+      downloadBlob(blob, `${baseName}_audio.mp3`);
     }
   };
 

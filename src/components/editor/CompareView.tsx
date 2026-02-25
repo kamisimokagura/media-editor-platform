@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useRef, useState, useCallback, useEffect } from "react";
 
@@ -96,10 +97,6 @@ export function CompareView({
           src={beforeImage}
           alt={beforeLabel}
           className="w-full h-full object-contain"
-          style={{
-            width: containerRef.current?.offsetWidth || "100%",
-            maxWidth: "none",
-          }}
           draggable={false}
         />
         <div className="absolute bottom-4 left-4 px-2 py-1 bg-black/50 text-white text-sm rounded">

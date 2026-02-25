@@ -104,9 +104,10 @@ function SignInContent() {
         });
         router.push(callbackUrl);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Auth error:", err);
-      toast.error(err.message || "ログインに失敗しました");
+      const message = err instanceof Error ? err.message : "ログインに失敗しました";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -116,9 +117,10 @@ function SignInContent() {
     try {
       setIsLoading(true);
       await signIn(provider, callbackUrl);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Social sign in error:", err);
-      toast.error(err.message || "ソーシャルログインに失敗しました");
+      const message = err instanceof Error ? err.message : "ソーシャルログインに失敗しました";
+      toast.error(message);
       setIsLoading(false);
     }
   };

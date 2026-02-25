@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useEditorStore } from "@/stores/editorStore";
 import { Button } from "@/components/ui";

@@ -3,12 +3,10 @@ import { v4 as uuidv4 } from "uuid";
 import type {
   MediaFile,
   Project,
-  Timeline,
   Track,
   Clip,
   ProcessingState,
   ImageAdjustments,
-  DEFAULT_IMAGE_ADJUSTMENTS,
 } from "@/types";
 
 interface EditorState {

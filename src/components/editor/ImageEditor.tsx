@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useRef, useEffect, useCallback, useState } from "react";
 import { useEditorStore } from "@/stores/editorStore";
@@ -485,7 +486,7 @@ export function ImageEditor({
     const currentX = (e.clientX - rect.left) * scaleX;
     const currentY = (e.clientY - rect.top) * scaleY;
 
-    let width = currentX - cropDragStart.x;
+    const width = currentX - cropDragStart.x;
     let height = currentY - cropDragStart.y;
 
     // Handle aspect ratio constraints

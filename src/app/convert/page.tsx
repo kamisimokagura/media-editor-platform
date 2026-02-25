@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useEffect, useState, useRef } from "react";
 import { Header } from "@/components/layout";
@@ -72,15 +73,20 @@ export default function ConvertPage() {
   const [imageOutputMode, setImageOutputMode] = useState<ImageOutputMode>("file");
   const [base64Result, setBase64Result] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentProcessingId, setCurrentProcessingId] = useState<string | null>(null);
+  const [, setCurrentProcessingId] = useState<string | null>(null);
   const abortRef = useRef(false);
+  const queueRef = useRef<QueueItem[]>([]);
 
   const { convertVideo, extractAudio, isLoading, ffmpegLoaded } = useFFmpeg();
   const { processingState } = useEditorStore();
 
   useEffect(() => {
+    queueRef.current = queue;
+  }, [queue]);
+
+  useEffect(() => {
     return () => {
-      queue.forEach((item) => {
+      queueRef.current.forEach((item) => {
         if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
       });
     };

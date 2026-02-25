@@ -35,7 +35,6 @@ export function useImageProcessor() {
     setOriginalImageData,
     setInitialImageData,
     initialImageData,
-    imageAdjustments,
     setProcessingState,
   } = useEditorStore();
 
@@ -371,13 +370,13 @@ export function useImageProcessor() {
 
         // Hue rotation
         if (hueFactor !== 0) {
-          let [h, s, l] = rgbToHsl(
+          const [h, s, l] = rgbToHsl(
             Math.max(0, Math.min(255, r)),
             Math.max(0, Math.min(255, g)),
             Math.max(0, Math.min(255, b))
           );
-          h = (h + hueFactor + 360) % 360;
-          [r, g, b] = hslToRgb(h, s, l);
+          const rotatedHue = (h + hueFactor + 360) % 360;
+          [r, g, b] = hslToRgb(rotatedHue, s, l);
         }
 
         // Highlights & Shadows

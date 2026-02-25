@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/layout";
 import { DropZone } from "@/components/ui";
 import { useEditorStore } from "@/stores/editorStore";
@@ -11,9 +10,8 @@ import { v4 as uuidv4 } from "uuid";
 import type { MediaFile, MediaType } from "@/types";
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
   const router = useRouter();
-  const { createProject, addMediaFile, setActiveTab, setCurrentImage } = useEditorStore();
+  const { createProject, addMediaFile, setCurrentImage } = useEditorStore();
   const [scrollProgress, setScrollProgress] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const heroRef = useRef<HTMLDivElement>(null);

@@ -1,8 +1,8 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useEditorStore } from "@/stores/editorStore";
-import { Button } from "@/components/ui";
 
 export function VideoPreview() {
   const videoRef = useRef<HTMLVideoElement>(null);
