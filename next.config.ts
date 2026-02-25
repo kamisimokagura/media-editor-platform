@@ -7,9 +7,9 @@ import path from "path";
  */
 const cspDirectives: Record<string, string[]> = {
   "default-src": ["'self'"],
-  "script-src": ["'self'", "'unsafe-eval'", "https://js.stripe.com"],
-  "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-  "font-src": ["'self'", "https://fonts.gstatic.com"],
+  "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://js.stripe.com"],
+  "style-src": ["'self'", "'unsafe-inline'"],
+  "font-src": ["'self'"],
   "img-src": ["'self'", "blob:", "data:"],
   "media-src": ["'self'", "blob:"],
   "connect-src": [

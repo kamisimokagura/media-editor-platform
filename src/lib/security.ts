@@ -234,7 +234,7 @@ export function createRateLimiter(maxRequests: number, windowMs: number) {
  */
 export const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
-  "script-src": ["'self'", "'unsafe-eval'", "https://js.stripe.com"], // unsafe-eval needed for FFmpeg.wasm
+  "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://js.stripe.com"], // unsafe-inline needed for Next.js, unsafe-eval for FFmpeg.wasm
   "style-src": ["'self'", "'unsafe-inline'"],
   "font-src": ["'self'"],
   "img-src": ["'self'", "blob:", "data:"],
