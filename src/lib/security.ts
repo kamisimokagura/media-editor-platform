@@ -234,14 +234,25 @@ export function createRateLimiter(maxRequests: number, windowMs: number) {
  */
 export const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
-  "script-src": ["'self'", "'unsafe-eval'"], // unsafe-eval needed for FFmpeg.wasm
-  "style-src": ["'self'", "'unsafe-inline'"],
+  "script-src": ["'self'", "'unsafe-eval'", "https://js.stripe.com"], // unsafe-eval needed for FFmpeg.wasm
+  "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+  "font-src": ["'self'", "https://fonts.gstatic.com"],
   "img-src": ["'self'", "blob:", "data:"],
   "media-src": ["'self'", "blob:"],
-  "connect-src": ["'self'", "https://unpkg.com"], // For FFmpeg.wasm CDN
+  "connect-src": [
+    "'self'",
+    "https://unpkg.com",
+    "https://cdn.jsdelivr.net",
+    "https://api.stripe.com",
+    "https://api.resend.com",
+    "https://*.supabase.co",
+  ],
   "worker-src": ["'self'", "blob:"],
+  "frame-src": ["https://js.stripe.com"],
   "object-src": ["'none'"],
   "frame-ancestors": ["'none'"],
+  "base-uri": ["'self'"],
+  "form-action": ["'self'"],
 };
 
 export function generateCSPHeader(): string {
