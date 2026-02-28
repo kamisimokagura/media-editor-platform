@@ -6,3 +6,4 @@ export { ToolChain } from "./ToolChain";
 export { ModelSelector } from "./ModelSelector";
 export { AIGenerateModal } from "./AIGenerateModal";
 export { AIVideoModal } from "./AIVideoModal";
+export { AIChatPanel } from "./AIChatPanel";
