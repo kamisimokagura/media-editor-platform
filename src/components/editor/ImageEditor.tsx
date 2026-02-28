@@ -18,6 +18,9 @@ import { useCrop } from "./hooks/useCrop";
 import { useExportSettings } from "./hooks/useExportSettings";
 import { TabContent, type TabContentProps } from "./panels/TabContent";
 import { ExportModal } from "./ExportModal";
+import { useAIStore } from "@/stores/aiStore";
+import { useAIFeature } from "@/hooks/useAIFeature";
+import { ContextTaskbar, AIResultLayer, AIChatPanel, CreditBadge } from "@/components/ai";
 
 interface ImageEditorProps {
   initialTab?: EditorTab;
@@ -52,6 +55,11 @@ const TAB_ICONS: Record<EditorTab, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
   ),
+  ai: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  ),
 };
 
 const TABS: { id: EditorTab; label: string }[] = [
@@ -60,6 +68,7 @@ const TABS: { id: EditorTab; label: string }[] = [
   { id: "resize", label: "リサイズ" },
   { id: "filters", label: "フィルター" },
   { id: "tools", label: "ツール" },
+  { id: "ai", label: "AI" },
 ];
 
 export function ImageEditor({
@@ -101,6 +110,9 @@ export function ImageEditor({
 
   const { initCanvas, applyAdjustments, exportImage, resizeImage, cropImage } = useImageProcessor();
   const imageFiles = mediaFiles.filter((file) => file.type === "image");
+
+  const { chatOpen, setChatOpen } = useAIStore();
+  const { executeFeature } = useAIFeature();
 
   // Canvas coordinate helper
   const getCanvasCoordinates = useCallback((clientX: number, clientY: number) => {
@@ -296,6 +308,15 @@ export function ImageEditor({
 
   // ─── Handlers ───────────────────────────────────────
 
+  const handleAIFeatureSelect = useCallback((featureId: string) => {
+    // For now, just trigger with a placeholder processFn
+    // Each feature will get its real processFn when the specific AI tools are wired
+    executeFeature(featureId, async () => {
+      toast.info(`${featureId} の処理はAPIキー設定後に動作します`);
+      return null;
+    });
+  }, [executeFeature]);
+
   const handleResizeWidthChange = (newWidth: number) => {
     setResizeWidth(newWidth);
     if (resizeMaintainAspect && originalImageData) {
@@ -366,6 +387,7 @@ export function ImageEditor({
     onSetMosaicBrushSize: mosaic.setMosaicBrushSize,
     onApplyMosaic: mosaic.applyMosaic,
     onCancelMosaic: mosaic.cancelMosaic,
+    onAIFeatureSelect: handleAIFeatureSelect,
   };
 
   // ─── Render ─────────────────────────────────────────
@@ -395,6 +417,7 @@ export function ImageEditor({
       <div className="flex-1 flex flex-col min-w-0">
         <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-dark-900 p-3 sm:p-6 lg:p-10 overflow-auto">
           {currentImage ? (
+            <>
             <div
               className="relative inline-block"
               onMouseDown={!mosaic.mosaicMode ? crop.handleCropMouseDown : undefined}
@@ -468,7 +491,21 @@ export function ImageEditor({
                   </div>
                 </div>
               )}
+
+              <AIResultLayer
+                onApply={(layerId) => toast.success(`Layer ${layerId} applied`)}
+                onDiscard={(layerId) => toast.info(`Layer ${layerId} discarded`)}
+              />
             </div>
+
+            {/* Context Taskbar */}
+            <div className="mt-3 flex justify-center">
+              <ContextTaskbar
+                hasImage={!!currentImage}
+                onFeatureSelect={handleAIFeatureSelect}
+              />
+            </div>
+            </>
           ) : (
             <DropZone onFilesSelected={handleFilesSelected} accept="image" multiple={true} maxFiles={30} className="w-full max-w-lg" />
           )}
@@ -616,6 +653,17 @@ export function ImageEditor({
                   <span className="hidden sm:inline">詳細エクスポート</span>
                   <span className="sm:hidden text-xs">保存</span>
                 </Button>
+                <button
+                  onClick={() => setChatOpen(!chatOpen)}
+                  className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                    chatOpen ? "bg-purple-100 text-purple-600 dark:bg-purple-900/20" : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700"
+                  }`}
+                  title="AI Chat"
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
@@ -689,6 +737,12 @@ export function ImageEditor({
         setMaintainAspectRatio={exportSettings.setMaintainAspectRatio}
         estimateFileSize={exportSettings.estimateFileSize}
         onExport={exportSettings.handleExport}
+      />
+
+      <AIChatPanel
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        imageContext={currentImage ? `Image: ${currentImage.name}, ${originalImageData?.width}x${originalImageData?.height}` : undefined}
       />
     </div>
   );

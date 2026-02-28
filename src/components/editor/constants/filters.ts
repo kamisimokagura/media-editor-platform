@@ -1,4 +1,4 @@
-export type EditorTab = "adjust" | "crop" | "resize" | "filters" | "tools";
+export type EditorTab = "adjust" | "crop" | "resize" | "filters" | "tools" | "ai";
 export type CropAspectRatio = "free" | "1:1" | "4:3" | "16:9" | "9:16" | "3:2";
 export type FilterCategory = "all" | "basic" | "film" | "bw" | "color" | "creative";
 
