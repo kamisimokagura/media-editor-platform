@@ -92,3 +92,30 @@ export async function generateVideo(
   if (!url) throw new Error("No video in fal.ai result");
   return url;
 }
+
+// Video model endpoints
+export const VIDEO_MODELS_FAL: Record<string, string> = {
+  "seedance-2": "fal-ai/seedance",
+  "kling-3": "fal-ai/kling-video/v2/master",
+  "veo-3": "fal-ai/veo2",
+  "wan-2.6": "fal-ai/wan/v2.1/1.3b",
+  "pika-2.5": "fal-ai/pika/v2.2",
+};
+
+export async function generateFalVideo(
+  modelKey: string,
+  prompt: string,
+  options: { image_url?: string; duration?: number; aspect_ratio?: string } = {}
+): Promise<string> {
+  const endpoint = VIDEO_MODELS_FAL[modelKey];
+  if (!endpoint) throw new Error(`Unknown fal.ai video model: ${modelKey}`);
+
+  const input: Record<string, unknown> = {
+    prompt,
+    ...(options.image_url && { image_url: options.image_url }),
+    ...(options.duration && { duration: options.duration }),
+    ...(options.aspect_ratio && { aspect_ratio: options.aspect_ratio }),
+  };
+
+  return generateVideo(endpoint, input);
+}

@@ -5,3 +5,4 @@ export { AIResultLayer } from "./AIResultLayer";
 export { ToolChain } from "./ToolChain";
 export { ModelSelector } from "./ModelSelector";
 export { AIGenerateModal } from "./AIGenerateModal";
+export { AIVideoModal } from "./AIVideoModal";
