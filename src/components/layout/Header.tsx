@@ -6,13 +6,17 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEditorStore } from "@/stores/editorStore";
+import { AI_ENABLED } from "@/lib/featureFlags";
 
-const navItems = [
+const baseNavItems = [
   { href: "/editor", label: "動画編集" },
   { href: "/image", label: "画像編集" },
   { href: "/convert", label: "変換" },
-  { href: "/subscription", label: "サブスク" },
 ];
+
+const navItems = AI_ENABLED
+  ? [...baseNavItems, { href: "/subscription", label: "プラン" }]
+  : baseNavItems;
 
 export function Header() {
   const { user, loading, signOut } = useAuth();
@@ -185,16 +189,18 @@ export function Header() {
 
                     {/* Menu items */}
                     <div className="py-1">
-                      <Link
-                        href="/subscription"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                        サブスクリプション
-                      </Link>
+                      {AI_ENABLED && (
+                        <Link
+                          href="/subscription"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                          サブスクリプション
+                        </Link>
+                      )}
                       <button
                         onClick={() => {
                           setIsUserMenuOpen(false);

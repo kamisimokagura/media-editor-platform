@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type SubscriptionTier = 'free' | 'pro' | 'business' | 'enterprise';
+export type SubscriptionTier = 'free' | 'pro' | 'business' | 'enterprise' | 'ai_lite' | 'ai_pro';
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid';
 
 export type Database = {
@@ -26,6 +26,8 @@ export type Database = {
           usage_reset_at: string;
           total_files_processed: number;
           storage_used_bytes: number;
+          ai_credits_remaining: number;
+          ai_credits_reset_at: string;
           created_at: string;
           updated_at: string;
         };
@@ -42,6 +44,8 @@ export type Database = {
           usage_reset_at?: string;
           total_files_processed?: number;
           storage_used_bytes?: number;
+          ai_credits_remaining?: number;
+          ai_credits_reset_at?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -58,6 +62,8 @@ export type Database = {
           usage_reset_at?: string;
           total_files_processed?: number;
           storage_used_bytes?: number;
+          ai_credits_remaining?: number;
+          ai_credits_reset_at?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -327,6 +333,71 @@ export type Database = {
         };
         Relationships: [];
       };
+      ai_credit_packages: {
+        Row: {
+          id: string;
+          name: string;
+          credits: number;
+          price_jpy: number;
+          stripe_price_id: string | null;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          credits: number;
+          price_jpy: number;
+          stripe_price_id?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          credits?: number;
+          price_jpy?: number;
+          stripe_price_id?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      ai_usage_log: {
+        Row: {
+          id: string;
+          user_id: string;
+          action_type: string;
+          credits_consumed: number;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          action_type: string;
+          credits_consumed?: number;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          action_type?: string;
+          credits_consumed?: number;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'ai_usage_log_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -353,3 +424,5 @@ export type MediaFile = Tables<'media_files'>;
 export type ProcessingJob = Tables<'processing_jobs'>;
 export type AnalyticsEvent = Tables<'analytics_events'>;
 export type SubscriptionPlan = Tables<'subscription_plans'>;
+export type AiCreditPackage = Tables<'ai_credit_packages'>;
+export type AiUsageLog = Tables<'ai_usage_log'>;

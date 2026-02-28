@@ -23,27 +23,41 @@ const FALLBACK_PLANS: PlanResponseItem[] = [
     priceYearly: 0,
     stripePriceIdMonthly: null,
     stripePriceIdYearly: null,
-    features: ["基本編集", "ブラウザ処理", "標準サポート"],
+    features: ["基本編集機能", "ブラウザ内処理", "AI機能月5回お試し"],
     limits: {
       maxProjects: 3,
       maxFileSizeMb: 500,
-      teamSeats: 1,
+      aiCreditsMonthly: 5,
     },
   },
   {
-    id: "pro-plan",
-    name: "プロ",
-    tier: "pro",
-    priceMonthly: 150,
-    priceYearly: 1980,
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY ?? null,
-    stripePriceIdYearly:
-      process.env.STRIPE_PRICE_PRO_ONETIME ?? process.env.STRIPE_PRICE_PRO_YEARLY ?? null,
-    features: ["高度編集", "高速キュー", "優先サポート", "高画質エクスポート"],
+    id: "ai-lite-plan",
+    name: "AI Lite",
+    tier: "ai_lite",
+    priceMonthly: 480,
+    priceYearly: 3980,
+    stripePriceIdMonthly: process.env.STRIPE_PRICE_AI_LITE_MONTHLY ?? null,
+    stripePriceIdYearly: process.env.STRIPE_PRICE_AI_LITE_YEARLY ?? null,
+    features: ["基本編集機能", "AI機能月100回", "標準サポート"],
+    limits: {
+      maxProjects: 10,
+      maxFileSizeMb: 2048,
+      aiCreditsMonthly: 100,
+    },
+  },
+  {
+    id: "ai-pro-plan",
+    name: "AI Pro",
+    tier: "ai_pro",
+    priceMonthly: 980,
+    priceYearly: 7980,
+    stripePriceIdMonthly: process.env.STRIPE_PRICE_AI_PRO_MONTHLY ?? null,
+    stripePriceIdYearly: process.env.STRIPE_PRICE_AI_PRO_YEARLY ?? null,
+    features: ["基本編集機能", "AI機能月500回", "優先サポート", "HD書き出し"],
     limits: {
       maxProjects: 100,
-      maxFileSizeMb: 2048,
-      teamSeats: 3,
+      maxFileSizeMb: 4096,
+      aiCreditsMonthly: 500,
     },
   },
 ];
@@ -75,6 +89,16 @@ function getStripePriceIdFromEnv(
   tier: SubscriptionTier,
   cycle: "monthly" | "yearly"
 ): string | null {
+  if (tier === "ai_lite") {
+    return cycle === "monthly"
+      ? process.env.STRIPE_PRICE_AI_LITE_MONTHLY ?? null
+      : process.env.STRIPE_PRICE_AI_LITE_YEARLY ?? null;
+  }
+  if (tier === "ai_pro") {
+    return cycle === "monthly"
+      ? process.env.STRIPE_PRICE_AI_PRO_MONTHLY ?? null
+      : process.env.STRIPE_PRICE_AI_PRO_YEARLY ?? null;
+  }
   if (tier === "pro") {
     return cycle === "monthly"
       ? process.env.STRIPE_PRICE_PRO_MONTHLY ?? null
@@ -103,7 +127,7 @@ export async function GET() {
       .from("subscription_plans")
       .select("id,name,tier,price_monthly,price_yearly,features,limits,is_active")
       .eq("is_active", true)
-      .in("tier", ["free", "pro"])
+      .in("tier", ["free", "ai_lite", "ai_pro"])
       .order("price_monthly", { ascending: true });
 
     if (error || !data || data.length === 0) {

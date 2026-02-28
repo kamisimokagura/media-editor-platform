@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Header } from "@/components/layout";
 import { DropZone } from "@/components/ui";
 import { useEditorStore } from "@/stores/editorStore";
+import { AI_ENABLED } from "@/lib/featureFlags";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -145,7 +146,8 @@ export default function HomePage() {
       description: "最先端のAI技術で高画質化、背景削除、カラー化を実現。ワンクリックでプロ品質の仕上がり。",
       gradient: "from-amber-500 to-orange-400",
       features: ["AI高画質化", "背景自動削除", "カラー化"],
-      badge: "Coming Soon",
+      badge: AI_ENABLED ? undefined : "Coming Soon",
+      cta: AI_ENABLED ? { label: "今すぐ試す", href: "/subscription" } : undefined,
     },
   ];
 
@@ -161,7 +163,7 @@ export default function HomePage() {
   const stats = [
     { value: "100%", label: "ローカル処理", description: "サーバーにアップロードしない" },
     { value: "2GB", label: "最大ファイルサイズ", description: "大容量ファイルも処理可能" },
-    { value: "無料", label: "完全無料", description: "隠れた料金は一切なし" },
+    { value: "無料", label: "基本無料", description: "編集機能は完全無料" },
     { value: "0秒", label: "待ち時間", description: "登録不要ですぐ使える" },
   ];
 
@@ -393,6 +395,18 @@ export default function HomePage() {
                         </li>
                       ))}
                     </ul>
+
+                    {feature.cta && (
+                      <Link
+                        href={feature.cta.href}
+                        className="mt-8 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-xl shadow-lg hover:opacity-95 transition-opacity"
+                      >
+                        {feature.cta.label}
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </Link>
+                    )}
                     </div>
                   </div>
                 ))}

@@ -84,6 +84,14 @@ export async function POST(request: NextRequest) {
   params.set("success_url", successUrl);
   params.set("cancel_url", cancelUrl);
 
+  if (checkoutMode === "subscription") {
+    params.set("subscription_data[trial_period_days]", "7");
+    params.set(
+      "subscription_data[trial_settings][missing_payment_method][end_behavior]",
+      "cancel"
+    );
+  }
+
   if (planTier) {
     params.set("metadata[plan_tier]", planTier);
   }

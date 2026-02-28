@@ -11,8 +11,14 @@ function resolveNextAuthSecret(): string {
     return configured;
   }
 
-  // CI builds and local development can run without production secrets.
-  if (process.env.CI === "true" || process.env.NODE_ENV !== "production") {
+  // Build phase (next build) and local dev can run without production secrets.
+  // At runtime in production, NextAuth will still reject unauthenticated requests
+  // because OAuth providers won't have valid client IDs/secrets.
+  if (
+    process.env.CI === "true" ||
+    process.env.NODE_ENV !== "production" ||
+    process.env.NEXT_PHASE === "phase-production-build"
+  ) {
     return "dev-only-nextauth-secret";
   }
 
