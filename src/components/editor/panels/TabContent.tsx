@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Button, Slider } from "@/components/ui";
+import { AIToolbar } from "@/components/ai";
 import type { ImageAdjustments } from "@/types";
 import {
   ADJUSTMENT_CONTROLS,
@@ -295,6 +296,7 @@ interface ToolsPanelProps {
   onCancelMosaic: () => void;
   variant?: "desktop" | "mobile";
   onCloseMobilePanel?: () => void;
+  onAIFeatureSelect?: (featureId: string) => void;
 }
 
 export function ToolsPanel({
@@ -308,6 +310,7 @@ export function ToolsPanel({
   onCancelMosaic,
   variant = "desktop",
   onCloseMobilePanel,
+  onAIFeatureSelect,
 }: ToolsPanelProps) {
   const isMobile = variant === "mobile";
 
@@ -376,39 +379,10 @@ export function ToolsPanel({
         )}
       </div>
 
-      {/* AI features - Coming Soon */}
-      <div className={`p-4 rounded-xl border ${
-        isMobile
-          ? "bg-purple-50 dark:bg-purple-900/20"
-          : "bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-purple-200 dark:border-purple-800"
-      }`}>
-        {!isMobile && (
-          <div className="flex items-center gap-2 mb-2">
-            <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">AI機能 (Coming Soon)</span>
-          </div>
-        )}
-        <p className="text-xs text-purple-600 dark:text-purple-400 mb-3">
-          {isMobile ? "AI機能（高画質化・背景削除等）は近日公開予定" : "AI高画質化、背景削除、カラー化など"}
-        </p>
-        {!isMobile && (
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { icon: "🔍", title: "AI高画質化" },
-              { icon: "✂️", title: "背景削除" },
-              { icon: "🎨", title: "カラー化" },
-              { icon: "👤", title: "顔補正" },
-            ].map((feature, index) => (
-              <div key={index} className="p-2.5 bg-white/50 dark:bg-dark-800/50 rounded-lg text-center opacity-60">
-                <span className="text-lg">{feature.icon}</span>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{feature.title}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* AI features */}
+      {onAIFeatureSelect && (
+        <AIToolbar onFeatureSelect={onAIFeatureSelect} />
+      )}
     </div>
   );
 }
@@ -457,6 +431,9 @@ export interface TabContentProps {
   onApplyMosaic: () => void;
   onCancelMosaic: () => void;
   onCloseMobilePanel?: () => void;
+
+  // AI
+  onAIFeatureSelect?: (featureId: string) => void;
 }
 
 export function TabContent(props: TabContentProps) {
@@ -519,7 +496,12 @@ export function TabContent(props: TabContentProps) {
           onCancelMosaic={props.onCancelMosaic}
           variant={variant}
           onCloseMobilePanel={props.onCloseMobilePanel}
+          onAIFeatureSelect={props.onAIFeatureSelect}
         />
+      );
+    case "ai":
+      return (
+        <AIToolbar onFeatureSelect={props.onAIFeatureSelect!} />
       );
   }
 }

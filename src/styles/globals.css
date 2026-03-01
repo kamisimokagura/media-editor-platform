@@ -31,6 +31,16 @@
   --color-accent-emerald: #10b981;
 }
 
+/* AI Dark Frost Theme */
+@theme {
+  --color-ai-base: #0A0A0F;
+  --color-ai-surface: #12121A;
+  --color-ai-frost: rgba(255, 255, 255, 0.05);
+  --color-ai-accent: #8B5CF6;
+  --color-ai-free: #10B981;
+  --color-ai-paid: #F59E0B;
+}
+
 /* ============================================
    AWWWARDS-LEVEL BASE STYLES
    ============================================ */
