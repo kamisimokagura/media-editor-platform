@@ -5,8 +5,14 @@ interface PackageResponseItem {
   id: string;
   name: string;
   credits: number;
+  /** Display label for credits (-1 = unlimited) */
+  creditsLabel: string;
   priceJpy: number;
   stripePriceId: string | null;
+}
+
+function creditsLabel(credits: number): string {
+  return credits === -1 ? "無制限" : `${credits.toLocaleString()} クレジット`;
 }
 
 const FALLBACK_PACKAGES: PackageResponseItem[] = [
@@ -14,6 +20,7 @@ const FALLBACK_PACKAGES: PackageResponseItem[] = [
     id: "pack-s",
     name: "Pack S",
     credits: 200,
+    creditsLabel: creditsLabel(200),
     priceJpy: 1980,
     stripePriceId: process.env.STRIPE_PRICE_PACK_S ?? null,
   },
@@ -21,6 +28,7 @@ const FALLBACK_PACKAGES: PackageResponseItem[] = [
     id: "pack-m",
     name: "Pack M",
     credits: 600,
+    creditsLabel: creditsLabel(600),
     priceJpy: 4980,
     stripePriceId: process.env.STRIPE_PRICE_PACK_M ?? null,
   },
@@ -28,6 +36,7 @@ const FALLBACK_PACKAGES: PackageResponseItem[] = [
     id: "pack-l",
     name: "Pack L",
     credits: 1500,
+    creditsLabel: creditsLabel(1500),
     priceJpy: 9800,
     stripePriceId: process.env.STRIPE_PRICE_PACK_L ?? null,
   },
@@ -35,6 +44,7 @@ const FALLBACK_PACKAGES: PackageResponseItem[] = [
     id: "lifetime",
     name: "Lifetime",
     credits: -1,
+    creditsLabel: creditsLabel(-1),
     priceJpy: 14800,
     stripePriceId: process.env.STRIPE_PRICE_LIFETIME ?? null,
   },
@@ -85,6 +95,7 @@ export async function GET() {
       id: pkg.id,
       name: pkg.name,
       credits: pkg.credits,
+      creditsLabel: creditsLabel(pkg.credits),
       priceJpy: pkg.price_jpy,
       stripePriceId: getPackStripePriceId(pkg.name) ?? pkg.stripe_price_id,
     }));

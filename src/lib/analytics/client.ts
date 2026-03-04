@@ -6,7 +6,7 @@ import {
   GA4_EVENT_NAME_MAP,
 } from "@/lib/analytics/events";
 
-const SESSION_STORAGE_KEY = "mediaeditor_analytics_session_id";
+const SESSION_STORAGE_KEY = "mediedi_analytics_session_id";
 
 declare global {
   interface Window {

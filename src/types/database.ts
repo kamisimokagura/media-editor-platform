@@ -398,9 +398,45 @@ export type Database = {
           }
         ];
       };
+      stripe_webhook_events: {
+        Row: {
+          event_id: string;
+          event_type: string;
+          status: string;
+          processed_at: string;
+          error_message: string | null;
+          metadata: Json;
+        };
+        Insert: {
+          event_id: string;
+          event_type: string;
+          status?: string;
+          processed_at?: string;
+          error_message?: string | null;
+          metadata?: Json;
+        };
+        Update: {
+          event_id?: string;
+          event_type?: string;
+          status?: string;
+          processed_at?: string;
+          error_message?: string | null;
+          metadata?: Json;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      consume_credits: {
+        Args: { p_user_id: string; p_amount: number };
+        Returns: number;
+      };
+      refund_credits: {
+        Args: { p_user_id: string; p_amount: number };
+        Returns: number;
+      };
+    };
     Enums: {
       subscription_tier: SubscriptionTier;
       subscription_status: SubscriptionStatus;

@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
 
   const fromEmail = toOptionalString(process.env.CONTACT_FROM_EMAIL, 320) ?? DEFAULT_CONTACT_FROM;
   const submittedAt = new Date().toISOString();
-  const subject = `[MediaEditor] お問い合わせ: ${nameCheck.value}`;
+  const subject = `[MediEdi!] お問い合わせ: ${nameCheck.value}`;
   const text = [
-    "MediaEditor お問い合わせ",
+    "MediEdi! お問い合わせ",
     `Name: ${nameCheck.value}`,
     `Email: ${emailCheck.value}`,
     `Submitted At (UTC): ${submittedAt}`,

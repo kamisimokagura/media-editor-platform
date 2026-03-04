@@ -51,6 +51,25 @@ function cleanupRateLimits() {
   }
 }
 
+/** Build allowed hosts from environment (Issue #10: strict origin matching) */
+function getAllowedHosts(): Set<string> {
+  const hosts = new Set<string>(["localhost", "localhost:3000", "localhost:4000", "127.0.0.1:3000"]);
+
+  // Production URL
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (appUrl) {
+    try { hosts.add(new URL(appUrl).host); } catch { /* ignore */ }
+  }
+
+  // Vercel URLs
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl) hosts.add(vercelUrl);
+  const vercelProdUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercelProdUrl) hosts.add(vercelProdUrl);
+
+  return hosts;
+}
+
 export async function proxy(request: NextRequest) {
   // Skip static files and API routes that handle their own security
   if (
@@ -68,18 +87,27 @@ export async function proxy(request: NextRequest) {
     return new NextResponse('Too Many Requests', { status: 429 });
   }
 
-  // CSRF protection for API routes (except auth callbacks)
+  // CSRF protection for API routes (except auth callbacks and stripe webhook)
   if (
     request.nextUrl.pathname.startsWith('/api') &&
     !request.nextUrl.pathname.startsWith('/api/auth') &&
+    !request.nextUrl.pathname.startsWith('/api/stripe/webhook') &&
     request.method !== 'GET'
   ) {
     const origin = request.headers.get('origin');
-    const host = request.headers.get('host');
 
-    // Allow requests without origin (server-to-server) or matching origin
-    if (origin && host && !origin.includes(host)) {
-      return new NextResponse('Forbidden', { status: 403 });
+    if (origin) {
+      // Issue #10: Strict origin comparison using URL parse (not includes)
+      const allowed = getAllowedHosts();
+      let originHost: string;
+      try {
+        originHost = new URL(origin).host;
+      } catch {
+        return new NextResponse('Forbidden', { status: 403 });
+      }
+      if (!allowed.has(originHost)) {
+        return new NextResponse('Forbidden', { status: 403 });
+      }
     }
   }
 

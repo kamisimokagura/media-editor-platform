@@ -1,11 +1,15 @@
 import { NextRequest } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { reserveCredits, refundCredits, logUsage, isBillingError } from "@/lib/ai/billing-guard";
+import { validateChatMessages } from "@/lib/ai/input-limits";
 
 interface ChatRequest {
   messages: Array<{ role: "user" | "assistant"; content: string }>;
   llm_provider: "gemini" | "claude" | "grok";
   image_context?: string;
 }
+
+const VALID_PROVIDERS = new Set(["gemini", "claude", "grok"]);
+const MAX_IMAGE_CONTEXT_LENGTH = 8000;
 
 const SYSTEM_PROMPT = `You are an AI assistant for a media editor platform. Help users edit images and videos.
 When suggesting actions, include them as JSON at the end of your response in this format:
@@ -106,15 +110,27 @@ async function streamGrok(messages: ChatRequest["messages"], imageContext?: stri
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return new Response(JSON.stringify({ error: "認証が必要です" }), { status: 401 });
+  const body = await request.json() as ChatRequest;
+
+  // Provider validation
+  if (!body.llm_provider || !VALID_PROVIDERS.has(body.llm_provider)) {
+    return new Response(JSON.stringify({ error: "llm_provider が不正です。gemini, claude, grok のいずれかを指定してください" }), { status: 400 });
   }
 
-  const body = await request.json() as ChatRequest;
-  if (!body.messages || !body.llm_provider) {
-    return new Response(JSON.stringify({ error: "messages と llm_provider が必要です" }), { status: 400 });
+  // Messages validation
+  const msgErr = validateChatMessages(body.messages);
+  if (msgErr) {
+    return new Response(JSON.stringify({ error: msgErr }), { status: 400 });
+  }
+
+  // Image context length validation
+  if (body.image_context && (typeof body.image_context !== "string" || body.image_context.length > MAX_IMAGE_CONTEXT_LENGTH)) {
+    return new Response(JSON.stringify({ error: `image_context は${MAX_IMAGE_CONTEXT_LENGTH}文字以内にしてください` }), { status: 400 });
+  }
+
+  const billing = await reserveCredits("chat");
+  if (isBillingError(billing)) {
+    return new Response(JSON.stringify({ error: "クレジットが不足しています" }), { status: 402 });
   }
 
   try {
@@ -131,8 +147,11 @@ export async function POST(request: NextRequest) {
         stream = await streamGrok(body.messages, body.image_context);
         break;
       default:
+        await refundCredits(billing.userId, "chat");
         return new Response(JSON.stringify({ error: "不明なプロバイダー" }), { status: 400 });
     }
+
+    void logUsage(billing.userId, "chat", billing.cost, { provider: body.llm_provider });
 
     return new Response(stream, {
       headers: {
@@ -142,6 +161,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (err) {
+    await refundCredits(billing.userId, "chat");
     return new Response(
       JSON.stringify({ error: err instanceof Error ? err.message : "チャットに失敗しました" }),
       { status: 500 }

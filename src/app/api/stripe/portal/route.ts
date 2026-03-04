@@ -3,20 +3,10 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { trackServerEvent } from "@/lib/analytics/server";
 import { sanitizeReturnUrl } from "@/lib/api/origin";
-import {
-  badRequestResponse,
-  optionalStripeCustomerId,
-  parseJsonBody,
-  toOptionalString,
-} from "@/lib/api/validation";
+import { parseJsonBody, toOptionalString, badRequestResponse } from "@/lib/api/validation";
 
 interface PortalRequestBody {
-  customerId?: unknown;
   returnUrl?: unknown;
-}
-
-function hasSupabaseConfig() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
 
 export async function POST(request: NextRequest) {
@@ -25,6 +15,13 @@ export async function POST(request: NextRequest) {
       { error: "Stripeが未設定です。STRIPE_SECRET_KEYを設定してください。" },
       { status: 503 }
     );
+  }
+
+  // Authentication required
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
   const parsedBody = await parseJsonBody(request, {
@@ -36,34 +33,14 @@ export async function POST(request: NextRequest) {
   }
   const body = parsedBody.value as PortalRequestBody;
 
-  const customerIdCheck = optionalStripeCustomerId(body.customerId);
-  if (!customerIdCheck.ok) {
-    return badRequestResponse("customerIdが不正です。");
-  }
+  // Always use the authenticated user's own stripe_customer_id
+  const { data } = await supabase
+    .from("users")
+    .select("stripe_customer_id")
+    .eq("id", user.id)
+    .single();
 
-  let customerId = customerIdCheck.value;
-
-  if (!customerId && hasSupabaseConfig()) {
-    try {
-      const supabase = await createServerSupabaseClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data } = await supabase
-          .from("users")
-          .select("stripe_customer_id")
-          .eq("id", user.id)
-          .single();
-
-        customerId = data?.stripe_customer_id ?? undefined;
-      }
-    } catch {
-      // Ignore and continue to explicit error response below.
-    }
-  }
-
+  const customerId = data?.stripe_customer_id;
   if (!customerId) {
     return NextResponse.json(
       { error: "Stripe顧客IDが見つかりません。先にサブスクリプションを紐づけてください。" },
@@ -113,9 +90,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      url: result.url ?? null,
-    });
+    return NextResponse.json({ url: result.url ?? null });
   } catch (error) {
     return NextResponse.json(
       {

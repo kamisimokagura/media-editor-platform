@@ -693,12 +693,14 @@ export default function HomePage() {
             {/* Logo & Description */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                <div className="w-14 h-14 bg-gradient-to-br from-violet-600 via-blue-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
+                  <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 19V5l6 7 6-7v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="20" cy="5" r="1.5" fill="currentColor" opacity="0.8"/>
+                    <circle cx="18" cy="9" r="0.8" fill="currentColor" opacity="0.5"/>
                   </svg>
                 </div>
-                <span className="font-bold text-2xl">MediaEditor</span>
+                <span className="font-bold text-2xl">MediEdi!</span>
               </div>
               <p className="text-gray-400 leading-relaxed max-w-md">
                 プライバシー重視のブラウザ内メディア編集プラットフォーム。
@@ -732,6 +734,7 @@ export default function HomePage() {
                 {[
                   { name: "プライバシーポリシー", href: "/privacy" },
                   { name: "利用規約", href: "/terms" },
+                  { name: "特定商取引法に基づく表記", href: "/tokushoho" },
                   { name: "お問い合わせ", href: "/contact" },
                 ].map((link, i) => (
                   <li key={i}>
@@ -750,7 +753,7 @@ export default function HomePage() {
                 Powered by FFmpeg.wasm - 全ての処理はブラウザ内で実行されます
               </p>
               <p className="text-gray-500 text-sm">
-                &copy; {new Date().getFullYear()} MediaEditor. All rights reserved.
+                &copy; {new Date().getFullYear()} MediEdi! All rights reserved.
               </p>
             </div>
           </div>

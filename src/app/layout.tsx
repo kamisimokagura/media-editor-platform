@@ -35,8 +35,8 @@ const poppins = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL("https://mediaeditor.app"),
   title: {
-    default: "MediaEditor - AI搭載ブラウザ動画・画像編集ツール | 無料でプロ級編集",
-    template: "%s | MediaEditor",
+    default: "MediEdi! - AI搭載ブラウザ動画・画像編集ツール | 無料でプロ級編集",
+    template: "%s | MediEdi!",
   },
   description:
     "完全無料・登録不要のブラウザ内メディア編集プラットフォーム。AI高画質化、背景削除、動画トリミング、画像圧縮・フィルター加工をサーバーアップロードなしで安全に実行。プロ級の編集をブラウザだけで。",
@@ -65,9 +65,9 @@ export const metadata: Metadata = {
     "free video editor",
     "browser based editor",
   ],
-  authors: [{ name: "MediaEditor Team", url: "https://mediaeditor.app" }],
-  creator: "MediaEditor",
-  publisher: "MediaEditor",
+  authors: [{ name: "MediEdi! Team", url: "https://mediaeditor.app" }],
+  creator: "MediEdi!",
+  publisher: "MediEdi!",
   formatDetection: {
     email: false,
     address: false,
@@ -85,8 +85,8 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     alternateLocale: "en_US",
     url: "https://mediaeditor.app",
-    siteName: "MediaEditor",
-    title: "MediaEditor - AI搭載ブラウザ動画・画像編集ツール",
+    siteName: "MediEdi!",
+    title: "MediEdi! - AI搭載ブラウザ動画・画像編集ツール",
     description:
       "完全無料・登録不要でプロ級のメディア編集。AI高画質化、背景削除、動画トリミングをブラウザだけで安全に。",
     images: [
@@ -94,18 +94,18 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "MediaEditor - ブラウザで動画・画像編集",
+        alt: "MediEdi! - ブラウザで動画・画像編集",
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MediaEditor - AI搭載ブラウザ動画・画像編集ツール",
+    title: "MediEdi! - AI搭載ブラウザ動画・画像編集ツール",
     description:
       "完全無料・登録不要でプロ級のメディア編集。AI高画質化、背景削除、動画トリミングをブラウザだけで安全に。",
     images: ["/twitter-image.png"],
-    creator: "@mediaeditor",
+    creator: "@mediedi_app",
   },
   robots: {
     index: true,
@@ -151,8 +151,8 @@ export const viewport: Viewport = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "MediaEditor",
-  alternateName: "メディアエディター",
+  name: "MediEdi!",
+  alternateName: "メディエディ",
   description:
     "完全無料・登録不要のブラウザ内メディア編集プラットフォーム。AI高画質化、背景削除、動画トリミング、画像圧縮をサーバーアップロードなしで安全に実行。",
   url: "https://mediaeditor.app",
@@ -186,7 +186,7 @@ const jsonLd = {
   screenshot: "https://mediaeditor.app/screenshot.png",
   author: {
     "@type": "Organization",
-    name: "MediaEditor Team",
+    name: "MediEdi! Team",
     url: "https://mediaeditor.app",
   },
 };
@@ -194,11 +194,11 @@ const jsonLd = {
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "MediaEditor",
+  name: "MediEdi!",
   url: "https://mediaeditor.app",
-  logo: "https://mediaeditor.app/logo.png",
+  logo: "https://mediaeditor.app/icon.svg",
   sameAs: [
-    "https://twitter.com/mediaeditor",
+    "https://twitter.com/mediedi_app",
     "https://github.com/mediaeditor",
   ],
   contactPoint: {
@@ -214,10 +214,10 @@ const faqJsonLd = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "MediaEditorは無料で使えますか？",
+      name: "MediEdi!は無料で使えますか？",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "はい、MediaEditorは完全無料でご利用いただけます。登録も不要で、すぐにお使いいただけます。",
+        text: "はい、MediEdi!は完全無料でご利用いただけます。登録も不要で、すぐにお使いいただけます。",
       },
     },
     {

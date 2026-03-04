@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { generateGeminiImage } from "@/lib/ai/providers/gemini-image";
 import { generateOpenAIImage } from "@/lib/ai/providers/openai-image";
 import { generateXAIImage } from "@/lib/ai/providers/xai";
 import { generateFluxImage, generateRecraftImage } from "@/lib/ai/providers/fal";
+import { reserveCredits, refundCredits, logUsage, isBillingError } from "@/lib/ai/billing-guard";
+import { validatePrompt } from "@/lib/ai/input-limits";
 
 interface GenerateRequest {
   prompt: string;
@@ -21,13 +22,13 @@ const MODEL_HANDLERS: Record<string, (req: GenerateRequest) => Promise<{ image?:
 };
 
 export async function POST(request: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
-
   const body = await request.json() as GenerateRequest;
-  if (!body.prompt || !body.model) {
-    return NextResponse.json({ error: "prompt と model が必要です" }, { status: 400 });
+
+  const promptErr = validatePrompt(body.prompt);
+  if (promptErr) return NextResponse.json({ error: promptErr }, { status: 400 });
+
+  if (!body.model) {
+    return NextResponse.json({ error: "model が必要です" }, { status: 400 });
   }
 
   const handler = MODEL_HANDLERS[body.model];
@@ -35,10 +36,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `不明なモデル: ${body.model}` }, { status: 400 });
   }
 
+  const billing = await reserveCredits("generate", body.model);
+  if (isBillingError(billing)) return billing.response;
+
   try {
     const result = await handler(body);
+    await logUsage(billing.userId, "generate", billing.cost, { model: body.model });
     return NextResponse.json(result);
   } catch (err) {
+    await refundCredits(billing.userId, "generate", body.model);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "画像生成に失敗しました" },
       { status: 500 }

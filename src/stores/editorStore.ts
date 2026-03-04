@@ -52,6 +52,7 @@ interface EditorState {
   // Media actions
   addMediaFile: (file: MediaFile) => void;
   removeMediaFile: (id: string) => void;
+  clearAllMedia: () => void;
   selectMedia: (id: string | null) => void;
 
   // Timeline actions
@@ -182,12 +183,31 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   removeMediaFile: (id) => {
+    const file = get().mediaFiles.find((f) => f.id === id);
+    if (file?.url) {
+      URL.revokeObjectURL(file.url);
+    }
     set((state) => ({
       mediaFiles: state.mediaFiles.filter((f) => f.id !== id),
       selectedMediaId:
         state.selectedMediaId === id ? null : state.selectedMediaId,
       isDirty: true,
     }));
+  },
+
+  clearAllMedia: () => {
+    const { mediaFiles } = get();
+    for (const file of mediaFiles) {
+      if (file.url) {
+        URL.revokeObjectURL(file.url);
+      }
+    }
+    set({
+      mediaFiles: [],
+      selectedMediaId: null,
+      currentImage: null,
+      isDirty: true,
+    });
   },
 
   selectMedia: (id) => {

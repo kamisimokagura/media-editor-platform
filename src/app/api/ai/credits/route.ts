@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createServerSupabaseAdmin } from "@/lib/supabase/server";
-
-interface CreditRequestBody {
-  action: "check" | "consume";
-  operation: string;
-  credits_needed?: number;
-  credits_consumed?: number;
-}
+import { getOperationCost, isValidOperation } from "@/lib/ai/costs";
+import type { Json } from "@/types/database";
 
 export async function POST(request: NextRequest) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -21,7 +16,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
-  let body: CreditRequestBody;
+  let body: { action: string; operation: string; model?: string };
   try {
     body = await request.json();
   } catch {
@@ -32,59 +27,63 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "action と operation は必須です" }, { status: 400 });
   }
 
-  const { data: userData, error: userError } = await supabase
-    .from("users")
-    .select("ai_credits_remaining")
-    .eq("id", user.id)
-    .single();
-
-  if (userError || !userData) {
-    return NextResponse.json({ error: "ユーザー情報の取得に失敗しました" }, { status: 500 });
+  if (!isValidOperation(body.operation, body.model)) {
+    return NextResponse.json({ error: "不正な operation または model です" }, { status: 400 });
   }
 
-  const creditsRemaining = userData.ai_credits_remaining ?? 0;
+  // Server-side cost determination (never trust client)
+  const cost = getOperationCost(body.operation, body.model);
 
   if (body.action === "check") {
-    const creditsNeeded = body.credits_needed ?? 1;
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("ai_credits_remaining")
+      .eq("id", user.id)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json({ error: "ユーザー情報の取得に失敗しました" }, { status: 500 });
+    }
+
+    const creditsRemaining = userData.ai_credits_remaining ?? 0;
     return NextResponse.json({
-      allowed: creditsRemaining >= creditsNeeded,
+      allowed: creditsRemaining >= cost,
       credits_remaining: creditsRemaining,
-      credits_needed: creditsNeeded,
+      credits_needed: cost,
     });
   }
 
   if (body.action === "consume") {
-    const creditsConsumed = body.credits_consumed ?? 1;
+    const admin = await createServerSupabaseAdmin();
+    const { data, error } = await admin.rpc("consume_credits", {
+      p_user_id: user.id,
+      p_amount: cost,
+    });
 
-    if (creditsRemaining < creditsConsumed) {
+    if (error) {
+      return NextResponse.json({ error: "クレジットの更新に失敗しました" }, { status: 500 });
+    }
+
+    const remaining = data as number;
+
+    if (remaining === -1) {
       return NextResponse.json({
         success: false,
         error: "クレジットが不足しています",
-        credits_remaining: creditsRemaining,
+        credits_remaining: 0,
       }, { status: 402 });
-    }
-
-    const admin = await createServerSupabaseAdmin();
-
-    const { error: updateError } = await admin
-      .from("users")
-      .update({ ai_credits_remaining: creditsRemaining - creditsConsumed })
-      .eq("id", user.id);
-
-    if (updateError) {
-      return NextResponse.json({ error: "クレジットの更新に失敗しました" }, { status: 500 });
     }
 
     await admin.from("ai_usage_log").insert({
       user_id: user.id,
       action_type: body.operation,
-      credits_consumed: creditsConsumed,
-      metadata: { operation: body.operation },
+      credits_consumed: cost,
+      metadata: { operation: body.operation, model: body.model } as unknown as Json,
     });
 
     return NextResponse.json({
       success: true,
-      credits_remaining: creditsRemaining - creditsConsumed,
+      credits_remaining: remaining,
     });
   }
 

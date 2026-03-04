@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E1B4B"/>
+      <stop offset="100%" style="stop-color:#0F172A"/>
+    </linearGradient>
+    <linearGradient id="main" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="50%" style="stop-color:#3B82F6"/>
+      <stop offset="100%" style="stop-color:#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A78BFA;stop-opacity:0.6"/>
+      <stop offset="100%" style="stop-color:#67E8F9;stop-opacity:0.2"/>
+    </linearGradient>
+    <filter id="starGlow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Nebula glow -->
+  <ellipse cx="256" cy="256" rx="200" ry="180" fill="url(#glow)" opacity="0.3"/>
+  <!-- Stars -->
+  <circle cx="80" cy="90" r="2" fill="#E0E7FF" opacity="0.8" filter="url(#starGlow)"/>
+  <circle cx="430" cy="70" r="1.5" fill="#E0E7FF" opacity="0.7" filter="url(#starGlow)"/>
+  <circle cx="60" cy="380" r="1.8" fill="#C4B5FD" opacity="0.6" filter="url(#starGlow)"/>
+  <circle cx="450" cy="420" r="2.2" fill="#A5F3FC" opacity="0.7" filter="url(#starGlow)"/>
+  <circle cx="350" cy="100" r="1.2" fill="#E0E7FF" opacity="0.5" filter="url(#starGlow)"/>
+  <circle cx="150" cy="430" r="1.6" fill="#C4B5FD" opacity="0.6" filter="url(#starGlow)"/>
+  <!-- Sparkle cross stars -->
+  <g transform="translate(400,130)" opacity="0.8" filter="url(#starGlow)">
+    <line x1="-8" y1="0" x2="8" y2="0" stroke="#E0E7FF" stroke-width="1.5"/>
+    <line x1="0" y1="-8" x2="0" y2="8" stroke="#E0E7FF" stroke-width="1.5"/>
+  </g>
+  <g transform="translate(100,150)" opacity="0.6" filter="url(#starGlow)">
+    <line x1="-6" y1="0" x2="6" y2="0" stroke="#C4B5FD" stroke-width="1"/>
+    <line x1="0" y1="-6" x2="0" y2="6" stroke="#C4B5FD" stroke-width="1"/>
+  </g>
+  <!-- ME monogram - stylized M and E fusion -->
+  <g transform="translate(106, 120)">
+    <!-- M shape -->
+    <path d="M40 280 L40 60 L150 180 L260 60 L260 280"
+          stroke="url(#main)" stroke-width="36" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- E crossbars integrated into the right stroke of M -->
+    <line x1="260" y1="60" x2="340" y2="60" stroke="url(#main)" stroke-width="32" stroke-linecap="round"/>
+    <line x1="260" y1="170" x2="320" y2="170" stroke="url(#main)" stroke-width="32" stroke-linecap="round"/>
+    <line x1="260" y1="280" x2="340" y2="280" stroke="url(#main)" stroke-width="32" stroke-linecap="round"/>
+  </g>
+  <!-- Edit pen icon (small, bottom-right area) -->
+  <g transform="translate(370,340) rotate(-45)" opacity="0.9">
+    <rect x="-6" y="-30" width="12" height="40" rx="3" fill="url(#main)"/>
+    <polygon points="-6,10 6,10 0,22" fill="url(#main)"/>
+  </g>
+  <!-- Orbital ring -->
+  <ellipse cx="256" cy="256" rx="220" ry="60" fill="none" stroke="url(#main)" stroke-width="1.5" opacity="0.2" transform="rotate(-20,256,256)"/>
+  <!-- ! exclamation - part of branding -->
+  <g transform="translate(410,180)">
+    <rect x="-8" y="0" width="16" height="50" rx="8" fill="#06B6D4"/>
+    <circle cx="0" cy="68" r="9" fill="#06B6D4"/>
+  </g>
+</svg>

@@ -1,8 +1,8 @@
 {
-  "name": "media-editor-platform",
+  "name": "mediedi-platform",
   "version": "0.1.0",
   "private": true,
-  "description": "Hybrid AI Media Editor Platform - Browser-based video/image editing with AI capabilities",
+  "description": "MediEdi! - AI搭載ブラウザ動画・画像編集プラットフォーム",
   "scripts": {
     "dev": "next dev -p 3000",
     "dev:alt": "next dev -p 4000",

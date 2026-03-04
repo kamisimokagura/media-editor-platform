@@ -202,7 +202,7 @@ export function Timeline() {
             <div
               key={track.id}
               className={`
-                h-16 flex items-center justify-between px-3 border-b border-dark-700 cursor-pointer
+                group h-16 flex items-center justify-between px-3 border-b border-dark-700 cursor-pointer
                 ${selectedTrackId === track.id ? "bg-primary-900/20" : "hover:bg-dark-700"}
               `}
               onClick={() => selectTrack(track.id)}

@@ -1,28 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { trackServerEvent } from "@/lib/analytics/server";
 import { sanitizeReturnUrl } from "@/lib/api/origin";
 import {
   badRequestResponse,
-  optionalEmail,
   optionalEnumValue,
   parseJsonBody,
   requireStripePriceId,
   toOptionalString,
 } from "@/lib/api/validation";
+import { isAllowedPriceId, PRICE_TO_TIER, PACK_PRICE_IDS } from "@/lib/stripe/pricing";
 
 interface CheckoutRequestBody {
   priceId?: unknown;
-  planTier?: unknown;
   billingCycle?: unknown;
-  checkoutMode?: unknown;
   successUrl?: unknown;
   cancelUrl?: unknown;
-  customerEmail?: unknown;
 }
 
 const BILLING_CYCLES = ["monthly", "yearly", "one_time"] as const;
-const CHECKOUT_MODES = ["subscription", "payment"] as const;
 
 export async function POST(request: NextRequest) {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -30,6 +27,13 @@ export async function POST(request: NextRequest) {
       { error: "Stripeが未設定です。STRIPE_SECRET_KEYを設定してください。" },
       { status: 503 }
     );
+  }
+
+  // Authentication required
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
   const parsedBody = await parseJsonBody(request, {
@@ -45,20 +49,14 @@ export async function POST(request: NextRequest) {
     return badRequestResponse("priceIdは必須で、形式は price_xxx である必要があります。");
   }
 
+  // Validate priceId against server-side allowlist
+  if (!isAllowedPriceId(priceIdCheck.value)) {
+    return badRequestResponse("不正なpriceIdです。");
+  }
+
   const billingCycleCheck = optionalEnumValue(body.billingCycle, BILLING_CYCLES, "billingCycle");
   if (!billingCycleCheck.ok) {
     return badRequestResponse("billingCycleが不正です。");
-  }
-
-  const checkoutModeCheck = optionalEnumValue(body.checkoutMode, CHECKOUT_MODES, "checkoutMode");
-  if (!checkoutModeCheck.ok) {
-    return badRequestResponse("checkoutModeが不正です。");
-  }
-
-  const planTier = toOptionalString(body.planTier, 64);
-  const customerEmailCheck = optionalEmail(body.customerEmail);
-  if (!customerEmailCheck.ok) {
-    return badRequestResponse("customerEmailが不正です。");
   }
 
   const rawSuccessUrl = toOptionalString(body.successUrl, 2048);
@@ -73,9 +71,14 @@ export async function POST(request: NextRequest) {
 
   const successUrl = sanitizeReturnUrl(rawSuccessUrl, "/subscription?status=success", request);
   const cancelUrl = sanitizeReturnUrl(rawCancelUrl, "/subscription?status=cancel", request);
-  const checkoutMode =
-    checkoutModeCheck.value ??
-    (billingCycleCheck.value === "one_time" ? "payment" : "subscription");
+
+  // Determine checkout mode from server-side mapping
+  const subscriptionInfo = PRICE_TO_TIER[priceIdCheck.value];
+  const packInfo = PACK_PRICE_IDS[priceIdCheck.value];
+  const checkoutMode = subscriptionInfo?.type === "subscription" ? "subscription" : "payment";
+
+  // Server-side metadata determination
+  const planTier = subscriptionInfo?.tier ?? packInfo?.tier;
 
   const params = new URLSearchParams();
   params.set("mode", checkoutMode);
@@ -83,6 +86,7 @@ export async function POST(request: NextRequest) {
   params.set("line_items[0][quantity]", "1");
   params.set("success_url", successUrl);
   params.set("cancel_url", cancelUrl);
+  params.set("client_reference_id", user.id);
 
   if (checkoutMode === "subscription") {
     params.set("subscription_data[trial_period_days]", "7");
@@ -98,8 +102,9 @@ export async function POST(request: NextRequest) {
   if (billingCycleCheck.value) {
     params.set("metadata[billing_cycle]", billingCycleCheck.value);
   }
-  if (customerEmailCheck.value) {
-    params.set("customer_email", customerEmailCheck.value);
+  // Set customer email from authenticated user
+  if (user.email) {
+    params.set("customer_email", user.email);
   }
 
   try {

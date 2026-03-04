@@ -130,17 +130,14 @@ function SignInContent() {
       <div className="bg-white dark:bg-dark-800 rounded-3xl shadow-xl p-6 sm:p-8 lg:p-10">
         <div className="text-center mb-8 sm:mb-10">
           <Link href="/" className="inline-flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
+            <div className="w-12 h-12 bg-gradient-to-br from-violet-600 via-blue-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
+              <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none">
+                <path d="M3 19V5l6 7 6-7v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="20" cy="5" r="1.5" fill="currentColor" opacity="0.8"/>
+                <circle cx="18" cy="9" r="0.8" fill="currentColor" opacity="0.5"/>
               </svg>
             </div>
-            <span className="font-bold text-2xl text-gray-900 dark:text-white">MediaEditor</span>
+            <span className="font-bold text-2xl text-gray-900 dark:text-white">MediEdi!</span>
           </Link>
 
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">

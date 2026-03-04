@@ -83,6 +83,10 @@ export function ImageEditor({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<EditorTab>(initialTab);
   const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false);
+  const [viewZoom, setViewZoom] = useState(1);
+  const [viewOffset, setViewOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
 
   // Filter state
   const [filterCategory, setFilterCategory] = useState<FilterCategory>("all");
@@ -103,6 +107,8 @@ export function ImageEditor({
     undoImageAdjustment,
     processingState,
     addMediaFile,
+    removeMediaFile,
+    clearAllMedia,
     mediaFiles,
     originalImageData,
     historyIndex,
@@ -233,6 +239,8 @@ export function ImageEditor({
       setCurrentImage(image);
       setImageLoaded(false);
       setIsMobilePanelOpen(false);
+      setViewZoom(1);
+      setViewOffset({ x: 0, y: 0 });
     },
     [currentImage?.id, setCurrentImage]
   );
@@ -415,20 +423,69 @@ export function ImageEditor({
     <div className="h-full flex flex-col md:flex-row bg-gray-50 dark:bg-dark-950">
       {/* Main canvas area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-dark-900 p-3 sm:p-6 lg:p-10 overflow-auto">
+        <div
+          className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-dark-900 overflow-hidden relative"
+          onWheel={(e) => {
+            if (!currentImage) return;
+            e.preventDefault();
+            const container = e.currentTarget;
+            const rect = container.getBoundingClientRect();
+            const cursorX = e.clientX - rect.left - rect.width / 2;
+            const cursorY = e.clientY - rect.top - rect.height / 2;
+
+            const oldZoom = viewZoom;
+            const newZoom = Math.min(10, Math.max(0.1, oldZoom + (e.deltaY > 0 ? -0.15 : 0.15) * oldZoom));
+            const scale = newZoom / oldZoom;
+
+            setViewZoom(newZoom);
+            setViewOffset((prev) => ({
+              x: cursorX - scale * (cursorX - prev.x),
+              y: cursorY - scale * (cursorY - prev.y),
+            }));
+          }}
+          onPointerDown={(e) => {
+            if (!currentImage) return;
+            // Don't start pan if clicking on UI controls (buttons, etc.)
+            const target = e.target as HTMLElement;
+            if (target.closest("button") || target.closest("[data-no-pan]")) return;
+            const canPan = e.button === 1 || (e.button === 0 && !crop.cropMode && !mosaic.mosaicMode);
+            if (!canPan) return;
+            e.preventDefault();
+            setIsPanning(true);
+            panStartRef.current = { x: e.clientX, y: e.clientY, offsetX: viewOffset.x, offsetY: viewOffset.y };
+            (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+          }}
+          onPointerMove={(e) => {
+            if (!isPanning) return;
+            setViewOffset({
+              x: panStartRef.current.offsetX + (e.clientX - panStartRef.current.x),
+              y: panStartRef.current.offsetY + (e.clientY - panStartRef.current.y),
+            });
+          }}
+          onPointerUp={(e) => {
+            if (isPanning) {
+              setIsPanning(false);
+              (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+            }
+          }}
+        >
           {currentImage ? (
             <>
             <div
-              className="relative inline-block"
-              onMouseDown={!mosaic.mosaicMode ? crop.handleCropMouseDown : undefined}
-              onMouseMove={!mosaic.mosaicMode ? crop.handleCropMouseMove : undefined}
+              className="relative inline-block transition-transform duration-75"
+              onMouseDown={!mosaic.mosaicMode && !isPanning ? crop.handleCropMouseDown : undefined}
+              onMouseMove={!mosaic.mosaicMode && !isPanning ? crop.handleCropMouseMove : undefined}
               onMouseUp={!mosaic.mosaicMode ? crop.handleCropMouseUp : undefined}
               onMouseLeave={!mosaic.mosaicMode ? crop.handleCropMouseUp : undefined}
               onTouchStart={!mosaic.mosaicMode ? crop.handleCropTouchStart : undefined}
               onTouchMove={!mosaic.mosaicMode ? crop.handleCropTouchMove : undefined}
               onTouchEnd={!mosaic.mosaicMode ? crop.handleCropMouseUp : undefined}
               onTouchCancel={!mosaic.mosaicMode ? crop.handleCropMouseUp : undefined}
-              style={crop.cropMode ? { touchAction: "none" } : undefined}
+              style={{
+                ...(crop.cropMode ? { touchAction: "none" as const } : {}),
+                transform: `translate(${viewOffset.x}px, ${viewOffset.y}px) scale(${viewZoom})`,
+                cursor: isPanning ? "grabbing" : !crop.cropMode && !mosaic.mosaicMode ? "grab" : undefined,
+              }}
             >
               <img
                 ref={imageRef}
@@ -445,7 +502,7 @@ export function ImageEditor({
 
               <canvas
                 ref={canvasRef}
-                className={`max-w-full max-h-[50vh] sm:max-h-[60vh] md:max-h-[70vh] rounded-lg shadow-lg ${crop.cropMode ? "cursor-crosshair" : ""} ${mosaic.mosaicMode ? "cursor-crosshair" : ""}`}
+                className={`max-w-full max-h-[80vh] rounded-lg shadow-lg ${crop.cropMode ? "cursor-crosshair" : ""} ${mosaic.mosaicMode ? "cursor-crosshair" : ""}`}
                 onPointerDown={mosaic.handleMosaicPointerDown}
                 onPointerMove={mosaic.handleMosaicPointerMove}
                 onPointerUp={mosaic.handleMosaicPointerEnd}
@@ -498,12 +555,54 @@ export function ImageEditor({
               />
             </div>
 
-            {/* Context Taskbar */}
-            <div className="mt-3 flex justify-center">
+            {/* Context Taskbar - overlay at bottom */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10">
               <ContextTaskbar
                 hasImage={!!currentImage}
                 onFeatureSelect={handleAIFeatureSelect}
               />
+            </div>
+
+            {/* Zoom controls */}
+            <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-lg p-1">
+              <button
+                onClick={() => {
+                  setViewZoom((prev) => Math.max(0.1, prev - 0.25));
+                }}
+                className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded transition-colors"
+                title="縮小"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                </svg>
+              </button>
+              <button
+                onClick={() => { setViewZoom(1); setViewOffset({ x: 0, y: 0 }); }}
+                className="px-2 py-1 text-xs text-white/80 hover:text-white hover:bg-white/10 rounded transition-colors font-medium min-w-[3rem] text-center"
+                title="リセット"
+              >
+                {Math.round(viewZoom * 100)}%
+              </button>
+              <button
+                onClick={() => {
+                  setViewZoom((prev) => Math.min(10, prev + 0.25));
+                }}
+                className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded transition-colors"
+                title="拡大"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+              <button
+                onClick={() => { setViewZoom(1); setViewOffset({ x: 0, y: 0 }); }}
+                className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded transition-colors ml-0.5 border-l border-white/20 pl-1.5"
+                title="表示リセット"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+              </button>
             </div>
             </>
           ) : (
@@ -512,22 +611,31 @@ export function ImageEditor({
         </div>
 
         {/* Image queue */}
-        {currentImage && imageFiles.length > 1 && (
+        {currentImage && imageFiles.length >= 1 && (
           <div className="bg-white dark:bg-dark-800 border-t border-gray-200 dark:border-dark-700 px-3 sm:px-5 lg:px-6 py-3">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">画像キュー ({imageFiles.length}枚)</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">編集対象: {currentImage.name}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">ファイル一覧 ({imageFiles.length}枚)</p>
+              <button
+                onClick={() => {
+                  clearAllMedia();
+                  setImageLoaded(false);
+                  resetImageAdjustments();
+                }}
+                className="text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+              >
+                すべてクリア
+              </button>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {imageFiles.map((file) => (
-                <button
+                <div
                   key={file.id}
-                  onClick={() => handleSelectImage(file)}
-                  className={`flex items-center gap-2 min-w-[180px] p-2 rounded-xl border transition-colors ${
+                  className={`group/item relative flex items-center gap-2 min-w-[180px] p-2 rounded-xl border transition-colors cursor-pointer ${
                     currentImage.id === file.id
                       ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
                       : "border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-700 hover:border-primary-400"
                   }`}
+                  onClick={() => handleSelectImage(file)}
                 >
                   <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 dark:bg-dark-600 flex-shrink-0">
                     {file.url ? (
@@ -536,13 +644,37 @@ export function ImageEditor({
                       <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs">IMG</div>
                     )}
                   </div>
-                  <div className="min-w-0 text-left">
+                  <div className="min-w-0 text-left flex-1">
                     <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate" title={file.name}>{file.name}</p>
                     <p className="text-[11px] text-gray-500 dark:text-gray-400">
                       {file.width && file.height ? `${file.width}x${file.height}` : "画像"}
                     </p>
                   </div>
-                </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const isCurrentFile = currentImage.id === file.id;
+                      removeMediaFile(file.id);
+                      if (isCurrentFile) {
+                        const remaining = imageFiles.filter((f) => f.id !== file.id);
+                        if (remaining.length > 0) {
+                          setCurrentImage(remaining[0]);
+                          setImageLoaded(false);
+                        } else {
+                          setCurrentImage(null);
+                          setImageLoaded(false);
+                          resetImageAdjustments();
+                        }
+                      }
+                    }}
+                    className="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-all rounded"
+                    title="削除"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -608,7 +740,15 @@ export function ImageEditor({
                 {/* New image */}
                 <div className="border-l border-gray-200 dark:border-dark-700 pl-2 sm:pl-4">
                   <button
-                    onClick={() => { setCurrentImage(null); setImageLoaded(false); resetImageAdjustments(); }}
+                    onClick={() => {
+                      if (currentImage) {
+                        URL.revokeObjectURL(currentImage.url);
+                        removeMediaFile(currentImage.id);
+                      }
+                      setCurrentImage(null);
+                      setImageLoaded(false);
+                      resetImageAdjustments();
+                    }}
                     className="p-1.5 sm:p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
                     title="新しい画像"
                   >

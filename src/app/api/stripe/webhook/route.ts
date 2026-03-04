@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { createServerSupabaseAdmin } from "@/lib/supabase/server";
-import type { SubscriptionTier } from "@/types/database";
+import type { SubscriptionTier, SubscriptionStatus } from "@/types/database";
+import { PRICE_TO_TIER, PACK_PRICE_IDS, TIER_CREDITS } from "@/lib/stripe/pricing";
 
-const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300; // 5 minutes
+const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300;
 
-const TIER_CREDITS: Record<string, number> = {
-  free: 5,
-  ai_lite: 100,
-  ai_pro: 500,
-};
+// --- Signature verification ---
 
 function verifyStripeSignature(
   payload: string,
@@ -59,271 +56,458 @@ function hasSupabaseConfig() {
   );
 }
 
+// --- Idempotency helpers (Issue #7) ---
+
+async function checkIdempotency(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseAdmin>>,
+  eventId: string,
+  eventType: string
+): Promise<"new" | "duplicate"> {
+  const { error } = await supabase.from("stripe_webhook_events").insert({
+    event_id: eventId,
+    event_type: eventType,
+    status: "processing",
+  });
+
+  // Unique constraint violation = duplicate
+  if (error?.code === "23505") {
+    console.log(`[stripe-webhook] Duplicate event skipped: ${eventId}`);
+    return "duplicate";
+  }
+  if (error) {
+    // Non-duplicate DB error - log but proceed (fail-open for availability)
+    console.error(`[stripe-webhook] Idempotency check error:`, error);
+  }
+  return "new";
+}
+
+async function markEventStatus(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseAdmin>>,
+  eventId: string,
+  status: "succeeded" | "failed",
+  errorMessage?: string
+) {
+  await supabase
+    .from("stripe_webhook_events")
+    .update({
+      status,
+      error_message: errorMessage ?? null,
+    })
+    .eq("event_id", eventId);
+}
+
+// --- Diagnostic logger (Issue #8) ---
+
+function diagLog(
+  level: "info" | "error" | "warn",
+  eventId: string,
+  eventType: string,
+  message: string,
+  extra?: Record<string, unknown>
+) {
+  const payload = {
+    event_id: eventId,
+    event_type: eventType,
+    message,
+    ...extra,
+    timestamp: new Date().toISOString(),
+  };
+  if (level === "error") console.error(`[stripe-webhook]`, JSON.stringify(payload));
+  else if (level === "warn") console.warn(`[stripe-webhook]`, JSON.stringify(payload));
+  else console.log(`[stripe-webhook]`, JSON.stringify(payload));
+}
+
+// --- User resolution helper (Issue #9) ---
+
+async function resolveUserId(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseAdmin>>,
+  clientReferenceId: string | undefined,
+  customerId: string | undefined
+): Promise<string | null> {
+  // Primary: client_reference_id = user.id set at checkout
+  if (clientReferenceId) {
+    const { data } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", clientReferenceId)
+      .single();
+    if (data) return data.id;
+  }
+  // Fallback: stripe_customer_id
+  if (customerId) {
+    const { data } = await supabase
+      .from("users")
+      .select("id")
+      .eq("stripe_customer_id", customerId)
+      .single();
+    if (data) return data.id;
+  }
+  return null;
+}
+
+/** Fetch line items from Stripe to get actual price ID */
+async function fetchCheckoutLineItems(sessionId: string): Promise<string | null> {
+  if (!process.env.STRIPE_SECRET_KEY) return null;
+
+  try {
+    const res = await fetch(
+      `https://api.stripe.com/v1/checkout/sessions/${sessionId}/line_items?limit=1`,
+      {
+        headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
+        cache: "no-store",
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.data?.[0]?.price?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// --- Assertion helper (Issue #8: no silent failures) ---
+
+function assertUpdateSucceeded(
+  result: { error: unknown; count?: number | null },
+  context: string,
+  eventId: string,
+  eventType: string
+): void {
+  if (result.error) {
+    throw new Error(`DB update failed [${context}]: ${JSON.stringify(result.error)}`);
+  }
+  // count is available when .update() includes count option
+  // If count is 0, the user wasn't found - this is a critical issue
+  if (result.count === 0) {
+    diagLog("warn", eventId, eventType, `0 rows updated in ${context} - user may not exist`);
+  }
+}
+
+// --- Main handler ---
+
 export async function POST(request: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
     console.error("[stripe-webhook] STRIPE_WEBHOOK_SECRET is not configured");
-    return NextResponse.json(
-      { error: "Webhook not configured" },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
   }
 
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
-    return NextResponse.json(
-      { error: "Missing stripe-signature header" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
   }
 
   let rawBody: string;
   try {
     rawBody = await request.text();
   } catch {
-    return NextResponse.json(
-      { error: "Failed to read request body" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Failed to read request body" }, { status: 400 });
   }
 
   if (!verifyStripeSignature(rawBody, signature, webhookSecret)) {
-    return NextResponse.json(
-      { error: "Invalid signature" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  let event: { type: string; data: { object: Record<string, unknown> } };
+  let event: { id: string; type: string; data: { object: Record<string, unknown> } };
   try {
     event = JSON.parse(rawBody);
   } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON payload" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
   }
 
-  const supabaseAvailable = hasSupabaseConfig();
+  const eventId = event.id;
+  const eventType = event.type;
 
-  switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object;
-      const customerId = session.customer as string | undefined;
-      const mode = session.mode as string | undefined;
-      const metadata = session.metadata as Record<string, string> | undefined;
-      const planTier = metadata?.plan_tier as SubscriptionTier | undefined;
-      const subscriptionId = session.subscription as string | undefined;
-      const status = session.status as string | undefined;
+  if (!hasSupabaseConfig()) {
+    diagLog("warn", eventId, eventType, "Supabase not configured, skipping DB operations");
+    return NextResponse.json({ received: true });
+  }
 
-      console.log(
-        `[stripe-webhook] Checkout completed: ${session.id}, customer: ${customerId}, mode: ${mode}`
-      );
+  const supabase = await createServerSupabaseAdmin();
 
-      if (supabaseAvailable && customerId) {
-        const supabase = await createServerSupabaseAdmin();
+  // Issue #7: Idempotency check
+  const idempotencyResult = await checkIdempotency(supabase, eventId, eventType);
+  if (idempotencyResult === "duplicate") {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
 
-        if (mode === "subscription" && planTier) {
-          const credits = TIER_CREDITS[planTier] ?? 5;
-          const isTrialing = status === "trialing" || (session as Record<string, unknown>).payment_status === "no_payment_required";
+  try {
+    switch (eventType) {
+      case "checkout.session.completed":
+        await handleCheckoutCompleted(supabase, event, eventId, eventType);
+        break;
 
-          const { error } = await supabase
-            .from("users")
-            .update({
-              subscription_tier: planTier,
-              subscription_status: isTrialing ? "trialing" : "active",
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId ?? null,
-              ai_credits_remaining: credits,
-              ai_credits_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            })
-            .eq("stripe_customer_id", customerId);
+      case "customer.subscription.updated":
+        await handleSubscriptionUpdated(supabase, event, eventId, eventType);
+        break;
 
-          if (error) {
-            // Fallback: try matching by email from the session
-            const customerEmail = session.customer_email as string | undefined;
-            if (customerEmail) {
-              await supabase
-                .from("users")
-                .update({
-                  subscription_tier: planTier,
-                  subscription_status: isTrialing ? "trialing" : "active",
-                  stripe_customer_id: customerId,
-                  stripe_subscription_id: subscriptionId ?? null,
-                  ai_credits_remaining: credits,
-                  ai_credits_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                })
-                .eq("email", customerEmail);
-            }
-          }
-        } else if (mode === "payment" && metadata?.billing_cycle === "one_time") {
-          // One-time credit package purchase
-          const packCredits = getPackCredits(metadata.plan_tier);
-          if (packCredits !== null) {
-            const { data: userData } = await supabase
-              .from("users")
-              .select("ai_credits_remaining")
-              .eq("stripe_customer_id", customerId)
-              .single();
+      case "customer.subscription.deleted":
+        await handleSubscriptionDeleted(supabase, event, eventId, eventType);
+        break;
 
-            const currentCredits = userData?.ai_credits_remaining ?? 0;
-            const newCredits = packCredits === -1 ? 999999 : currentCredits + packCredits;
+      case "invoice.payment_failed":
+        await handlePaymentFailed(supabase, event, eventId, eventType);
+        break;
 
-            await supabase
-              .from("users")
-              .update({
-                stripe_customer_id: customerId,
-                ai_credits_remaining: newCredits,
-              })
-              .eq("stripe_customer_id", customerId);
+      case "customer.subscription.trial_will_end":
+        await handleTrialEnding(supabase, event, eventId, eventType);
+        break;
 
-            await supabase.from("ai_usage_log").insert({
-              user_id: (await supabase.from("users").select("id").eq("stripe_customer_id", customerId).single()).data?.id ?? "",
-              action_type: "credit_purchase",
-              credits_consumed: 0,
-              metadata: { pack: metadata.plan_tier, credits_added: packCredits },
-            });
-          }
-        }
-      }
-      break;
+      default:
+        diagLog("info", eventId, eventType, "Unhandled event type");
     }
 
-    case "customer.subscription.updated": {
-      const subscription = event.data.object;
-      const subStatus = subscription.status as string;
-      const customerId = subscription.customer as string | undefined;
-      const items = subscription.items as { data?: Array<{ price?: { id?: string } }> } | undefined;
-      const priceId = items?.data?.[0]?.price?.id;
-
-      console.log(
-        `[stripe-webhook] Subscription updated: ${subscription.id}, status: ${subStatus}`
-      );
-
-      if (supabaseAvailable && customerId) {
-        const supabase = await createServerSupabaseAdmin();
-
-        const tier = priceIdToTier(priceId);
-        const updateData: Record<string, unknown> = {
-          subscription_status: mapStripeStatus(subStatus),
-        };
-
-        if (tier) {
-          updateData.subscription_tier = tier;
-          updateData.ai_credits_remaining = TIER_CREDITS[tier] ?? 5;
-          updateData.ai_credits_reset_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-        }
-
-        await supabase
-          .from("users")
-          .update(updateData)
-          .eq("stripe_customer_id", customerId);
-      }
-      break;
-    }
-
-    case "customer.subscription.deleted": {
-      const subscription = event.data.object;
-      const customerId = subscription.customer as string | undefined;
-
-      console.log(
-        `[stripe-webhook] Subscription deleted: ${subscription.id}`
-      );
-
-      if (supabaseAvailable && customerId) {
-        const supabase = await createServerSupabaseAdmin();
-
-        await supabase
-          .from("users")
-          .update({
-            subscription_tier: "free" as SubscriptionTier,
-            subscription_status: "canceled",
-            stripe_subscription_id: null,
-            ai_credits_remaining: TIER_CREDITS.free,
-          })
-          .eq("stripe_customer_id", customerId);
-      }
-      break;
-    }
-
-    case "invoice.payment_failed": {
-      const invoice = event.data.object;
-      const customerId = invoice.customer as string | undefined;
-
-      console.log(
-        `[stripe-webhook] Payment failed: invoice ${invoice.id}, customer: ${customerId}`
-      );
-
-      if (supabaseAvailable && customerId) {
-        const supabase = await createServerSupabaseAdmin();
-
-        await supabase
-          .from("users")
-          .update({ subscription_status: "past_due" })
-          .eq("stripe_customer_id", customerId);
-      }
-      break;
-    }
-
-    case "customer.subscription.trial_will_end": {
-      const subscription = event.data.object;
-      const customerId = subscription.customer as string | undefined;
-
-      console.log(
-        `[stripe-webhook] Trial ending soon: ${subscription.id}, customer: ${customerId}`
-      );
-
-      if (supabaseAvailable && customerId) {
-        const supabase = await createServerSupabaseAdmin();
-
-        const { data: userData } = await supabase
-          .from("users")
-          .select("id")
-          .eq("stripe_customer_id", customerId)
-          .single();
-
-        if (userData) {
-          await supabase.from("analytics_events").insert({
-            user_id: userData.id,
-            event_name: "TRIAL_ENDING_SOON",
-            event_category: "subscription",
-            event_params: {
-              subscription_id: String(subscription.id ?? ""),
-              trial_end: String(subscription.trial_end ?? ""),
-            },
-          });
-        }
-      }
-      break;
-    }
-
-    default:
-      console.log(`[stripe-webhook] Unhandled event type: ${event.type}`);
+    await markEventStatus(supabase, eventId, "succeeded");
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    diagLog("error", eventId, eventType, `Processing failed: ${errorMsg}`);
+    await markEventStatus(supabase, eventId, "failed", errorMsg);
+    // Return 500 so Stripe retries
+    return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
 }
 
-function getPackCredits(packTier: string | undefined): number | null {
-  switch (packTier) {
-    case "pack_s": return 200;
-    case "pack_m": return 600;
-    case "pack_l": return 1500;
-    case "lifetime": return -1; // unlimited
-    default: return null;
+// --- Event handlers ---
+
+async function handleCheckoutCompleted(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseAdmin>>,
+  event: { data: { object: Record<string, unknown> } },
+  eventId: string,
+  eventType: string
+) {
+  const session = event.data.object;
+  const customerId = session.customer as string | undefined;
+  const mode = session.mode as string | undefined;
+  const subscriptionId = session.subscription as string | undefined;
+  const clientReferenceId = session.client_reference_id as string | undefined;
+  const sessionId = session.id as string;
+
+  diagLog("info", eventId, eventType, "Processing checkout", {
+    sessionId, customerId, mode, clientReferenceId,
+  });
+
+  // Issue #9: Resolve user with guaranteed fallback
+  const userId = await resolveUserId(supabase, clientReferenceId, customerId);
+  if (!userId) {
+    throw new Error(`Cannot resolve user: clientReferenceId=${clientReferenceId}, customerId=${customerId}`);
+  }
+
+  // Issue #9: Always save stripe_customer_id on first purchase
+  if (customerId) {
+    await supabase
+      .from("users")
+      .update({ stripe_customer_id: customerId })
+      .eq("id", userId)
+      .is("stripe_customer_id", null);
+  }
+
+  // Fetch actual price ID from Stripe line items (server-side truth)
+  const priceId = await fetchCheckoutLineItems(sessionId);
+  if (!priceId) {
+    throw new Error(`Failed to fetch line items for session: ${sessionId}`);
+  }
+
+  if (mode === "subscription") {
+    const tierInfo = PRICE_TO_TIER[priceId];
+    if (!tierInfo?.tier) {
+      diagLog("warn", eventId, eventType, `Unknown subscription priceId: ${priceId}`);
+      return;
+    }
+
+    const tier = tierInfo.tier;
+    const credits = TIER_CREDITS[tier] ?? 5;
+    const isTrialing =
+      session.status === "trialing" ||
+      (session as Record<string, unknown>).payment_status === "no_payment_required";
+
+    const result = await supabase
+      .from("users")
+      .update({
+        subscription_tier: tier,
+        subscription_status: (isTrialing ? "trialing" : "active") as SubscriptionStatus,
+        stripe_customer_id: customerId ?? null,
+        stripe_subscription_id: subscriptionId ?? null,
+        ai_credits_remaining: credits,
+        ai_credits_reset_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      })
+      .eq("id", userId);
+
+    assertUpdateSucceeded(result, "subscription_checkout", eventId, eventType);
+    diagLog("info", eventId, eventType, `Subscription activated: tier=${tier}, credits=${credits}`);
+
+  } else if (mode === "payment") {
+    const packInfo = PACK_PRICE_IDS[priceId];
+    if (!packInfo) {
+      diagLog("warn", eventId, eventType, `Unknown pack priceId: ${priceId}`);
+      return;
+    }
+
+    const { data: userData } = await supabase
+      .from("users")
+      .select("ai_credits_remaining")
+      .eq("id", userId)
+      .single();
+
+    const currentCredits = userData?.ai_credits_remaining ?? 0;
+    const newCredits = packInfo.credits === -1 ? 999999 : currentCredits + packInfo.credits;
+
+    const result = await supabase
+      .from("users")
+      .update({
+        ai_credits_remaining: newCredits,
+      })
+      .eq("id", userId);
+
+    assertUpdateSucceeded(result, "credit_purchase", eventId, eventType);
+
+    await supabase.from("ai_usage_log").insert({
+      user_id: userId,
+      action_type: "credit_purchase",
+      credits_consumed: 0,
+      metadata: { pack: packInfo.tier, credits_added: packInfo.credits, event_id: eventId },
+    });
+
+    diagLog("info", eventId, eventType, `Credits purchased: pack=${packInfo.tier}, added=${packInfo.credits}`);
   }
 }
 
-function priceIdToTier(priceId: string | undefined): SubscriptionTier | null {
-  if (!priceId) return null;
+async function handleSubscriptionUpdated(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseAdmin>>,
+  event: { data: { object: Record<string, unknown> } },
+  eventId: string,
+  eventType: string
+) {
+  const subscription = event.data.object;
+  const subStatus = subscription.status as string;
+  const customerId = subscription.customer as string | undefined;
+  const items = subscription.items as { data?: Array<{ price?: { id?: string } }> } | undefined;
+  const priceId = items?.data?.[0]?.price?.id;
+  const previousAttributes = (subscription as Record<string, unknown>).previous_attributes as Record<string, unknown> | undefined;
 
-  const mapping: Record<string, SubscriptionTier> = {};
-  if (process.env.STRIPE_PRICE_AI_LITE_MONTHLY) mapping[process.env.STRIPE_PRICE_AI_LITE_MONTHLY] = "ai_lite";
-  if (process.env.STRIPE_PRICE_AI_LITE_YEARLY) mapping[process.env.STRIPE_PRICE_AI_LITE_YEARLY] = "ai_lite";
-  if (process.env.STRIPE_PRICE_AI_PRO_MONTHLY) mapping[process.env.STRIPE_PRICE_AI_PRO_MONTHLY] = "ai_pro";
-  if (process.env.STRIPE_PRICE_AI_PRO_YEARLY) mapping[process.env.STRIPE_PRICE_AI_PRO_YEARLY] = "ai_pro";
+  diagLog("info", eventId, eventType, "Processing subscription update", {
+    subscriptionId: subscription.id, subStatus, customerId, priceId,
+  });
 
-  return mapping[priceId] ?? null;
+  if (!customerId) {
+    throw new Error("subscription.updated missing customerId");
+  }
+
+  const tierInfo = priceId ? PRICE_TO_TIER[priceId] : undefined;
+  const tier = tierInfo?.tier ?? null;
+
+  const updateData: Record<string, unknown> = {
+    subscription_status: mapStripeStatus(subStatus),
+  };
+
+  if (tier) {
+    updateData.subscription_tier = tier;
+
+    // Issue #12: Only reset credits when tier actually changed (not on every update)
+    const tierChanged = previousAttributes && "items" in previousAttributes;
+    if (tierChanged) {
+      updateData.ai_credits_remaining = TIER_CREDITS[tier] ?? 5;
+      updateData.ai_credits_reset_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      diagLog("info", eventId, eventType, `Tier changed, resetting credits to ${TIER_CREDITS[tier] ?? 5}`);
+    }
+  }
+
+  const result = await supabase
+    .from("users")
+    .update(updateData)
+    .eq("stripe_customer_id", customerId);
+
+  assertUpdateSucceeded(result, "subscription_updated", eventId, eventType);
+}
+
+async function handleSubscriptionDeleted(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseAdmin>>,
+  event: { data: { object: Record<string, unknown> } },
+  eventId: string,
+  eventType: string
+) {
+  const subscription = event.data.object;
+  const customerId = subscription.customer as string | undefined;
+
+  diagLog("info", eventId, eventType, "Processing subscription deletion", {
+    subscriptionId: subscription.id, customerId,
+  });
+
+  if (!customerId) {
+    throw new Error("subscription.deleted missing customerId");
+  }
+
+  const result = await supabase
+    .from("users")
+    .update({
+      subscription_tier: "free" as SubscriptionTier,
+      subscription_status: "canceled",
+      stripe_subscription_id: null,
+      ai_credits_remaining: TIER_CREDITS.free,
+    })
+    .eq("stripe_customer_id", customerId);
+
+  assertUpdateSucceeded(result, "subscription_deleted", eventId, eventType);
+}
+
+async function handlePaymentFailed(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseAdmin>>,
+  event: { data: { object: Record<string, unknown> } },
+  eventId: string,
+  eventType: string
+) {
+  const invoice = event.data.object;
+  const customerId = invoice.customer as string | undefined;
+
+  diagLog("info", eventId, eventType, "Processing payment failure", {
+    invoiceId: invoice.id, customerId,
+  });
+
+  if (!customerId) {
+    throw new Error("invoice.payment_failed missing customerId");
+  }
+
+  const result = await supabase
+    .from("users")
+    .update({ subscription_status: "past_due" })
+    .eq("stripe_customer_id", customerId);
+
+  assertUpdateSucceeded(result, "payment_failed", eventId, eventType);
+}
+
+async function handleTrialEnding(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseAdmin>>,
+  event: { data: { object: Record<string, unknown> } },
+  eventId: string,
+  eventType: string
+) {
+  const subscription = event.data.object;
+  const customerId = subscription.customer as string | undefined;
+
+  diagLog("info", eventId, eventType, "Processing trial ending", {
+    subscriptionId: subscription.id, customerId,
+  });
+
+  if (!customerId) return;
+
+  const { data: userData } = await supabase
+    .from("users")
+    .select("id")
+    .eq("stripe_customer_id", customerId)
+    .single();
+
+  if (userData) {
+    await supabase.from("analytics_events").insert({
+      user_id: userData.id,
+      event_name: "TRIAL_ENDING_SOON",
+      event_category: "subscription",
+      event_params: {
+        subscription_id: String(subscription.id ?? ""),
+        trial_end: String(subscription.trial_end ?? ""),
+      },
+    });
+  }
 }
 
 function mapStripeStatus(status: string): string {
