@@ -7,22 +7,22 @@ export const metadata = {
 
 export default function TokushohoPage() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-950">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       <Header />
 
       <main className="w-full flex justify-center">
-        <article className="w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+        <article className="w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+          <h1 className="text-3xl font-bold font-[family-name:var(--font-poppins)] text-[var(--color-text)] mb-3">
             特定商取引法に基づく表記
           </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-8">
+          <p className="text-sm text-[var(--color-text-muted)] mb-8">
             最終更新日: 2026-03-04
           </p>
 
-          <section className="space-y-6 text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+          <section className="space-y-6 text-sm sm:text-base text-[var(--color-text-muted)] leading-relaxed">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-[var(--color-border)]">
                   <Row label="販売業者" value="MediEdi！" />
                   <Row label="運営統括責任者" value="RADITYAWAN AL MUFLICH" />
                   <Row
@@ -39,7 +39,7 @@ export default function TokushohoPage() {
                     value={
                       <Link
                         href="/"
-                        className="text-blue-600 hover:underline"
+                        className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                       >
                         https://medieditor.vercel.app
                       </Link>
@@ -52,7 +52,7 @@ export default function TokushohoPage() {
                         各プラン・パッケージの価格はサービス内の
                         <Link
                           href="/subscription"
-                          className="text-blue-600 hover:underline mx-1"
+                          className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] mx-1"
                         >
                           料金ページ
                         </Link>
@@ -97,14 +97,14 @@ export default function TokushohoPage() {
                         ご利用にあたっては
                         <Link
                           href="/terms"
-                          className="text-blue-600 hover:underline mx-1"
+                          className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] mx-1"
                         >
                           利用規約
                         </Link>
                         および
                         <Link
                           href="/privacy"
-                          className="text-blue-600 hover:underline mx-1"
+                          className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] mx-1"
                         >
                           プライバシーポリシー
                         </Link>
@@ -131,7 +131,7 @@ function Row({
 }) {
   return (
     <tr>
-      <th className="py-4 pr-4 text-left align-top font-semibold text-gray-900 dark:text-white whitespace-nowrap w-40">
+      <th className="py-4 pr-4 text-left align-top font-semibold text-[var(--color-text)] whitespace-nowrap w-40">
         {label}
       </th>
       <td className="py-4">{value}</td>
