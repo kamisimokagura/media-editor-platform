@@ -3,6 +3,21 @@
 import { useEffect, useState } from "react";
 import { useToastStore } from "@/stores/toastStore";
 import type { Toast as ToastType } from "@/types";
+import { CheckCircle, XCircle, Info, Warning, X } from "@phosphor-icons/react";
+
+const iconMap = {
+  success: <CheckCircle size={20} weight="fill" className="text-[var(--color-success)]" />,
+  error: <XCircle size={20} weight="fill" className="text-[var(--color-error)]" />,
+  info: <Info size={20} weight="fill" className="text-[var(--color-accent)]" />,
+  warning: <Warning size={20} weight="fill" className="text-[var(--color-warning)]" />,
+};
+
+const borderColorMap = {
+  success: "var(--color-success)",
+  error: "var(--color-error)",
+  info: "var(--color-accent)",
+  warning: "var(--color-warning)",
+};
 
 function ToastItem({ toast }: { toast: ToastType }) {
   const [isExiting, setIsExiting] = useState(false);
@@ -19,79 +34,24 @@ function ToastItem({ toast }: { toast: ToastType }) {
     }
   }, [toast.id, toast.duration, removeToast]);
 
-  const icons = {
-    success: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M5 13l4 4L19 7"
-        />
-      </svg>
-    ),
-    error: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M6 18L18 6M6 6l12 12"
-        />
-      </svg>
-    ),
-    info: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
-    warning: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        />
-      </svg>
-    ),
-  };
-
-  const colors = {
-    success: "bg-green-600",
-    error: "bg-red-600",
-    info: "bg-blue-600",
-    warning: "bg-yellow-600",
-  };
-
   return (
     <div
       className={`
-        flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white
+        flex items-center gap-3 px-4 py-3
+        bg-[var(--color-surface)] rounded-[var(--radius-md)] shadow-[var(--shadow-md)]
+        border border-[var(--color-border)]
         transform transition-all duration-300
-        ${colors[toast.type]}
         ${isExiting ? "opacity-0 translate-x-full" : "opacity-100 translate-x-0"}
       `}
+      style={{ borderLeftWidth: "4px", borderLeftColor: borderColorMap[toast.type] }}
     >
-      {icons[toast.type]}
-      <p className="text-sm font-medium">{toast.message}</p>
+      {iconMap[toast.type]}
+      <p className="text-sm font-medium text-[var(--color-text)]">{toast.message}</p>
       <button
         onClick={() => removeToast(toast.id)}
-        className="ml-auto -mr-1 p-1 hover:bg-white/20 rounded"
+        className="ml-auto -mr-1 p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded transition-colors"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
+        <X size={16} />
       </button>
     </div>
   );
