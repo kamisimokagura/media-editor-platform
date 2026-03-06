@@ -69,26 +69,25 @@ async function checkIdempotency(
     status: "processing",
   });
 
-  // Unique constraint violation — check if prior attempt failed/stalled and allow retry
+  // Unique constraint violation — atomically try to acquire retry lease
   if (error?.code === "23505") {
-    const { data: existing } = await supabase
+    const staleThreshold = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+    // Single atomic UPDATE: only succeeds if status is failed OR processing+stale
+    const { data: claimed, error: retryError } = await supabase
       .from("stripe_webhook_events")
-      .select("status, processed_at")
+      .update({ status: "processing", error_message: null, processed_at: new Date().toISOString() })
       .eq("event_id", eventId)
-      .single();
+      .or(`status.eq.failed,and(status.eq.processing,processed_at.lt.${staleThreshold})`)
+      .select("event_id");
 
-    const canRetry =
-      existing?.status === "failed" ||
-      (existing?.status === "processing" &&
-        existing.processed_at &&
-        Date.now() - new Date(existing.processed_at).getTime() > 5 * 60 * 1000);
+    if (retryError) {
+      console.error(`[stripe-webhook] Idempotency retry check error:`, retryError);
+      return "error";
+    }
 
-    if (canRetry) {
-      await supabase
-        .from("stripe_webhook_events")
-        .update({ status: "processing", error_message: null, processed_at: new Date().toISOString() })
-        .eq("event_id", eventId);
-      diagLog("info", eventId, eventType, `Retrying previously ${existing!.status} event`);
+    if (claimed && claimed.length > 0) {
+      diagLog("info", eventId, eventType, "Retrying previously failed/stalled event");
       return "new";
     }
 
