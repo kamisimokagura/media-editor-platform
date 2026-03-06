@@ -7,6 +7,8 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { ANALYTICS_EVENTS, trackClientEvent, trackPageView } from "@/lib/analytics/client";
 import { toast } from "@/stores/toastStore";
 import { AI_ENABLED } from "@/lib/featureFlags";
+import { Button, Card, SegmentedControl } from "@/components/ui";
+import { Check, Star, CreditCard, Crown, Infinity, Lightning } from "@phosphor-icons/react";
 
 type BillingTab = "monthly" | "yearly" | "one_time";
 
@@ -319,30 +321,25 @@ function SubscriptionPageContent() {
 
   if (!AI_ENABLED) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-dark-950">
+      <div className="min-h-screen bg-[var(--color-bg)]">
         <Header />
         <main className="w-full flex justify-center">
           <div className="w-full max-w-3xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 text-center">
-            <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+            <div className="w-16 h-16 mx-auto mb-6 bg-[var(--color-accent)] rounded-2xl flex items-center justify-center">
+              <Lightning size={32} weight="fill" className="text-[var(--color-text-inverse)]" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-text)] mb-4">
               AI機能 準備中
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-3">
+            <p className="text-lg text-[var(--color-text-muted)] mb-3">
               AI搭載の画像・動画編集機能を現在開発中です。
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
+            <p className="text-sm text-[var(--color-text-muted)] mb-8">
               基本的な編集機能は引き続き無料でご利用いただけます。
             </p>
-            <button
-              onClick={() => router.push("/")}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 hover:opacity-95 transition-opacity"
-            >
+            <Button variant="primary" size="lg" onClick={() => router.push("/")}>
               ホームに戻る
-            </button>
+            </Button>
           </div>
         </main>
       </div>
@@ -350,51 +347,45 @@ function SubscriptionPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-950">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       <Header />
 
       <main className="w-full flex justify-center">
         <div className="w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
           <section className="text-center mb-10 sm:mb-12">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+            <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-text)] mb-3">
               プラン・料金
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+            <p className="text-sm sm:text-base text-[var(--color-text-muted)]">
               基本編集は完全無料。AI機能を使いたい時だけアップグレード。
             </p>
           </section>
 
           <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <div className="inline-flex bg-white dark:bg-dark-800 rounded-2xl p-1.5 shadow">
-              {(["monthly", "yearly", "one_time"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setBillingTab(tab)}
-                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                    billingTab === tab
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                      : "text-gray-600 dark:text-gray-300"
-                  }`}
-                >
-                  {tab === "monthly" ? "月額" : tab === "yearly" ? "年額" : "買い切り"}
-                </button>
-              ))}
-            </div>
+            <SegmentedControl<BillingTab>
+              options={[
+                { value: "monthly", label: "月額" },
+                { value: "yearly", label: "年額" },
+                { value: "one_time", label: "買い切り" },
+              ]}
+              value={billingTab}
+              onChange={setBillingTab}
+            />
 
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+            <div className="text-xs sm:text-sm text-[var(--color-text-muted)]">
               <span className="inline-flex items-center gap-2 mr-4">
-                <span className={`w-2.5 h-2.5 rounded-full ${supabaseConfigured ? "bg-green-500" : "bg-amber-500"}`} />
-                Supabase: {supabaseConfigured ? "接続済み" : "フォールバック中"}
+                <span className={`w-2.5 h-2.5 rounded-full ${supabaseConfigured ? "bg-[var(--color-success)]" : "bg-[var(--color-warning)]"}`} />
+                Supabase: {supabaseConfigured ? <span className="text-[var(--color-success)]">接続済み</span> : <span className="text-[var(--color-warning)]">フォールバック中</span>}
               </span>
               <span className="inline-flex items-center gap-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${stripeConfigured ? "bg-green-500" : "bg-amber-500"}`} />
-                Stripe: {stripeConfigured ? "接続済み" : "未設定"}
+                <span className={`w-2.5 h-2.5 rounded-full ${stripeConfigured ? "bg-[var(--color-success)]" : "bg-[var(--color-error)]"}`} />
+                Stripe: {stripeConfigured ? <span className="text-[var(--color-success)]">接続済み</span> : <span className="text-[var(--color-error)]">未設定</span>}
               </span>
             </div>
           </section>
 
           {apiMessage && (
-            <div className="mb-6 p-4 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300 text-sm">
+            <div className="mb-6 p-4 rounded-[var(--radius-md)] bg-[var(--color-warning)]/10 text-[var(--color-warning)] text-sm">
               {apiMessage}
             </div>
           )}
@@ -404,13 +395,13 @@ function SubscriptionPageContent() {
             isLoadingPlans ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-80 bg-white dark:bg-dark-800 rounded-2xl animate-pulse" />
+                  <div key={i} className="h-80 bg-[var(--color-surface)] rounded-[var(--radius-lg)] animate-pulse" />
                 ))}
               </div>
             ) : plans.length === 0 ? (
-              <div className="p-6 rounded-2xl bg-white dark:bg-dark-800 text-sm text-red-600 dark:text-red-400">
-                プランが見つかりません。
-              </div>
+              <Card>
+                <p className="text-sm text-[var(--color-error)]">プランが見つかりません。</p>
+              </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {plans.map((plan) => {
@@ -420,19 +411,20 @@ function SubscriptionPageContent() {
                   const isPopular = plan.tier === "ai_lite";
 
                   return (
-                    <article
+                    <Card
                       key={plan.id}
-                      className={`rounded-2xl border p-6 bg-white dark:bg-dark-800 relative ${
+                      className={`relative ${
                         current
-                          ? "border-blue-500 shadow-lg shadow-blue-500/10"
+                          ? "ring-2 ring-[var(--color-accent)]"
                           : isPopular
-                            ? "border-purple-400 shadow-lg shadow-purple-500/10"
-                            : "border-gray-200 dark:border-dark-700"
+                            ? "ring-2 ring-[var(--color-accent)]"
+                            : ""
                       }`}
                     >
                       {isPopular && !current && (
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                          <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold rounded-full">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] text-xs font-semibold rounded-full">
+                            <Star size={12} weight="fill" />
                             おすすめ
                           </span>
                         </div>
@@ -440,24 +432,24 @@ function SubscriptionPageContent() {
 
                       <div className="flex items-start justify-between gap-4 mb-4">
                         <div>
-                          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{plan.name}</h2>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <h2 className="text-xl font-semibold text-[var(--color-text)]">{plan.name}</h2>
+                          <p className="text-sm text-[var(--color-text-muted)]">
                             {plan.tier === "free" ? "基本プラン" : plan.tier === "ai_lite" ? "AI入門" : "AIヘビーユーザー向け"}
                           </p>
                         </div>
                         <div className="flex gap-1.5">
                           {current && (
-                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--color-success-soft)] text-[var(--color-success)]">
                               現在
                             </span>
                           )}
                           {discount > 0 && (
-                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--color-success-soft)] text-[var(--color-success)]">
                               {discount}%お得
                             </span>
                           )}
                           {billingTab === "monthly" && plan.tier !== "free" && (
-                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]">
                               7日間無料
                             </span>
                           )}
@@ -465,22 +457,22 @@ function SubscriptionPageContent() {
                       </div>
 
                       <div className="mb-5">
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white">{formatPriceJPY(price)}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-3xl font-bold text-[var(--color-text)]">{formatPriceJPY(price)}</p>
+                        <p className="text-xs text-[var(--color-text-muted)]">
                           {billingTab === "monthly" ? "/ 月" : "/ 年"}
                         </p>
                       </div>
 
                       <ul className="space-y-2 mb-5">
                         {plan.features.slice(0, 5).map((feature, idx) => (
-                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                            <span className="mt-1 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                          <li key={idx} className="text-sm text-[var(--color-text)] flex items-start gap-2">
+                            <Check size={16} weight="bold" className="mt-0.5 text-[var(--color-success)] shrink-0" />
                             <span>{feature}</span>
                           </li>
                         ))}
                       </ul>
 
-                      <div className="mb-5 p-3 rounded-xl bg-gray-50 dark:bg-dark-700 text-xs text-gray-600 dark:text-gray-300">
+                      <div className="mb-5 p-3 rounded-[var(--radius-md)] bg-[var(--color-bg)] text-xs text-[var(--color-text-muted)]">
                         {Object.entries(plan.limits).length === 0 ? (
                           <span>明示的な利用制限はありません。</span>
                         ) : (
@@ -495,26 +487,25 @@ function SubscriptionPageContent() {
                       </div>
 
                       {plan.tier === "free" ? (
-                        <button
-                          disabled
-                          className="w-full py-2.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-dark-700 text-gray-500 dark:text-gray-400"
-                        >
+                        <Button variant="secondary" className="w-full" disabled>
                           無料プラン
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
+                          variant={isPopular ? "primary" : "secondary"}
+                          className="w-full"
                           onClick={() => void handleCheckout(plan)}
                           disabled={loading || checkoutTier === plan.tier || !stripeConfigured}
-                          className="w-full py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 disabled:opacity-50"
+                          isLoading={checkoutTier === plan.tier}
                         >
                           {checkoutTier === plan.tier
                             ? "決済ページへ移動中..."
                             : !stripeConfigured
                               ? "Stripe未設定"
                               : `${plan.name}を選択`}
-                        </button>
+                        </Button>
                       )}
-                    </article>
+                    </Card>
                   );
                 })}
               </div>
@@ -524,86 +515,96 @@ function SubscriptionPageContent() {
             isLoadingPackages ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="h-64 bg-white dark:bg-dark-800 rounded-2xl animate-pulse" />
+                  <div key={i} className="h-64 bg-[var(--color-surface)] rounded-[var(--radius-lg)] animate-pulse" />
                 ))}
               </div>
             ) : packages.length === 0 ? (
-              <div className="p-6 rounded-2xl bg-white dark:bg-dark-800 text-sm text-red-600 dark:text-red-400">
-                パッケージが見つかりません。
-              </div>
+              <Card>
+                <p className="text-sm text-[var(--color-error)]">パッケージが見つかりません。</p>
+              </Card>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {packages.map((pkg) => {
                   const isLifetime = pkg.credits === -1;
                   return (
-                    <article
+                    <Card
                       key={pkg.id}
-                      className={`rounded-2xl border p-6 bg-white dark:bg-dark-800 ${
-                        isLifetime
-                          ? "border-purple-400 shadow-lg shadow-purple-500/10"
-                          : "border-gray-200 dark:border-dark-700"
-                      }`}
+                      interactive
+                      className={isLifetime ? "ring-2 ring-[var(--color-accent)]" : ""}
                     >
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{pkg.name}</h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                        {isLifetime ? "無制限" : `${pkg.credits.toLocaleString()} クレジット`}
+                      <div className="flex items-center gap-2 mb-1">
+                        {isLifetime ? (
+                          <Crown size={20} weight="fill" className="text-[var(--color-accent)]" />
+                        ) : (
+                          <CreditCard size={20} className="text-[var(--color-accent)]" />
+                        )}
+                        <h2 className="text-lg font-semibold text-[var(--color-text)]">{pkg.name}</h2>
+                      </div>
+                      <p className="text-sm text-[var(--color-text-muted)] mb-4">
+                        {isLifetime ? (
+                          <span className="inline-flex items-center gap-1">
+                            <Infinity size={16} weight="bold" className="text-[var(--color-accent)]" />
+                            無制限
+                          </span>
+                        ) : (
+                          <span className="text-[var(--color-accent)]">{pkg.credits.toLocaleString()} クレジット</span>
+                        )}
                       </p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                      <p className="text-3xl font-bold text-[var(--color-text)] mb-1">
                         {formatPriceJPY(pkg.priceJpy)}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+                      <p className="text-xs text-[var(--color-text-muted)] mb-5">
                         {isLifetime
                           ? "一度の購入で永久利用"
                           : `1クレジットあたり ${formatPriceJPY(Math.round(pkg.priceJpy / pkg.credits))}`}
                       </p>
 
                       {isLifetime && (
-                        <div className="mb-4 p-2.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-xs text-purple-700 dark:text-purple-300">
+                        <div className="mb-4 p-2.5 rounded-[var(--radius-sm)] bg-[var(--color-accent-soft)] text-xs text-[var(--color-accent-text)]">
                           全AI機能が無制限で使い放題
                         </div>
                       )}
 
-                      <button
+                      <Button
+                        variant={isLifetime ? "primary" : "secondary"}
+                        className="w-full"
                         onClick={() => void handlePackageCheckout(pkg)}
                         disabled={loading || checkoutPackageId === pkg.id || !stripeConfigured}
-                        className={`w-full py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50 ${
-                          isLifetime
-                            ? "bg-gradient-to-r from-purple-600 to-pink-600"
-                            : "bg-gradient-to-r from-blue-600 to-purple-600"
-                        }`}
+                        isLoading={checkoutPackageId === pkg.id}
                       >
                         {checkoutPackageId === pkg.id
                           ? "決済ページへ移動中..."
                           : !stripeConfigured
                             ? "Stripe未設定"
                             : "購入する"}
-                      </button>
-                    </article>
+                      </Button>
+                    </Card>
                   );
                 })}
               </div>
             )
           )}
 
-          <section className="mt-10 sm:mt-12 rounded-2xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 p-5 sm:p-6">
+          <Card className="mt-10 sm:mt-12">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">請求情報の管理</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+                <h3 className="font-semibold text-[var(--color-text)] mb-1">請求情報の管理</h3>
+                <p className="text-sm text-[var(--color-text-muted)]">
                   支払い方法の更新や解約は、Stripeの請求ポータルから行えます。
                 </p>
               </div>
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => void handleOpenPortal()}
                 disabled={isOpeningPortal || !stripeConfigured}
-                className="px-4 py-2.5 rounded-xl text-sm font-medium border border-gray-300 dark:border-dark-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-700 disabled:opacity-50"
+                isLoading={isOpeningPortal}
               >
                 {isOpeningPortal ? "開いています..." : "請求ポータルを開く"}
-              </button>
+              </Button>
             </div>
-          </section>
+          </Card>
 
-          <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-4 text-xs text-[var(--color-text-muted)]">
             プラン取得元: <span className="font-medium">{source === "supabase" ? "Supabase" : "フォールバック"}</span>
           </p>
         </div>
@@ -614,13 +615,13 @@ function SubscriptionPageContent() {
 
 function SubscriptionPageFallback() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-950">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       <Header />
       <main className="w-full flex justify-center">
         <div className="w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-80 bg-white dark:bg-dark-800 rounded-2xl animate-pulse" />
+              <div key={i} className="h-80 bg-[var(--color-surface)] rounded-[var(--radius-lg)] animate-pulse" />
             ))}
           </div>
         </div>
