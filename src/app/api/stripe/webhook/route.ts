@@ -69,21 +69,26 @@ async function checkIdempotency(
     status: "processing",
   });
 
-  // Unique constraint violation — check if prior attempt failed and allow retry
+  // Unique constraint violation — check if prior attempt failed/stalled and allow retry
   if (error?.code === "23505") {
     const { data: existing } = await supabase
       .from("stripe_webhook_events")
-      .select("status")
+      .select("status, processed_at")
       .eq("event_id", eventId)
       .single();
 
-    if (existing?.status === "failed" || existing?.status === "processing") {
-      // Prior attempt failed or stalled — allow retry
+    const canRetry =
+      existing?.status === "failed" ||
+      (existing?.status === "processing" &&
+        existing.processed_at &&
+        Date.now() - new Date(existing.processed_at).getTime() > 5 * 60 * 1000);
+
+    if (canRetry) {
       await supabase
         .from("stripe_webhook_events")
-        .update({ status: "processing", error_message: null })
+        .update({ status: "processing", error_message: null, processed_at: new Date().toISOString() })
         .eq("event_id", eventId);
-      diagLog("info", eventId, eventType, `Retrying previously ${existing.status} event`);
+      diagLog("info", eventId, eventType, `Retrying previously ${existing!.status} event`);
       return "new";
     }
 
@@ -101,16 +106,25 @@ async function checkIdempotency(
 async function markEventStatus(
   supabase: Awaited<ReturnType<typeof createServerSupabaseAdmin>>,
   eventId: string,
+  eventType: string,
   status: "succeeded" | "failed",
   errorMessage?: string
 ) {
-  await supabase
+  const { error, count } = await supabase
     .from("stripe_webhook_events")
     .update({
       status,
       error_message: errorMessage ?? null,
     })
     .eq("event_id", eventId);
+
+  if (error) {
+    diagLog("error", eventId, eventType, `markEventStatus failed: ${JSON.stringify(error)}`);
+    throw new Error(`Failed to mark event status: ${JSON.stringify(error)}`);
+  }
+  if (count === 0) {
+    diagLog("warn", eventId, eventType, "markEventStatus updated 0 rows — event row missing");
+  }
 }
 
 // --- Diagnostic logger (Issue #8) ---
@@ -277,11 +291,13 @@ export async function POST(request: NextRequest) {
         diagLog("info", eventId, eventType, "Unhandled event type");
     }
 
-    await markEventStatus(supabase, eventId, "succeeded");
+    await markEventStatus(supabase, eventId, eventType, "succeeded");
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     diagLog("error", eventId, eventType, `Processing failed: ${errorMsg}`);
-    await markEventStatus(supabase, eventId, "failed", errorMsg);
+    await markEventStatus(supabase, eventId, eventType, "failed", errorMsg).catch((markErr) => {
+      diagLog("error", eventId, eventType, `markEventStatus also failed: ${markErr}`);
+    });
     // Return 500 so Stripe retries
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }

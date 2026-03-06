@@ -151,7 +151,15 @@ export async function POST(request: NextRequest) {
         return new Response(JSON.stringify({ error: "不明なプロバイダー" }), { status: 400 });
     }
 
-    // Wrap stream to detect both upstream errors and client disconnects
+    // Guard: ensure refund fires at most once
+    let refunded = false;
+    const tryRefund = () => {
+      if (refunded) return;
+      refunded = true;
+      void refundCredits(billing.userId, "chat");
+    };
+
+    // Wrap stream to detect delivery completion
     let delivered = false;
     const safeStream = stream.pipeThrough(
       new TransformStream({
@@ -166,9 +174,7 @@ export async function POST(request: NextRequest) {
 
     // Refund on client abort (disconnect)
     request.signal.addEventListener("abort", () => {
-      if (!delivered) {
-        void refundCredits(billing.userId, "chat");
-      }
+      if (!delivered) tryRefund();
     });
 
     // Monitor upstream completion in background
@@ -180,7 +186,7 @@ export async function POST(request: NextRequest) {
         while (!(await reader.read()).done) { /* drain */ }
         void logUsage(billing.userId, "chat", billing.cost, { provider: body.llm_provider });
       } catch {
-        await refundCredits(billing.userId, "chat");
+        tryRefund();
       }
     })();
 
