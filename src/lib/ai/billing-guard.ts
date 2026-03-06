@@ -70,17 +70,23 @@ export async function reserveCredits(
 /**
  * Refund credits after a failed AI operation.
  */
-export async function refundCredits(userId: string, operation: string, model?: string): Promise<void> {
+export async function refundCredits(userId: string, operation: string, model?: string): Promise<boolean> {
   const cost = getOperationCost(operation, model);
 
   try {
-    const admin = await createServerSupabaseAdmin();
-    await admin.rpc("refund_credits", {
+    const admin = createServerSupabaseAdmin();
+    const { error } = await admin.rpc("refund_credits", {
       p_user_id: userId,
       p_amount: cost,
     });
+    if (error) {
+      console.error("[billing-guard] Refund RPC error:", error);
+      return false;
+    }
+    return true;
   } catch (err) {
     console.error("[billing-guard] Refund failed:", err);
+    return false;
   }
 }
 

@@ -69,8 +69,24 @@ async function checkIdempotency(
     status: "processing",
   });
 
-  // Unique constraint violation = duplicate
+  // Unique constraint violation — check if prior attempt failed and allow retry
   if (error?.code === "23505") {
+    const { data: existing } = await supabase
+      .from("stripe_webhook_events")
+      .select("status")
+      .eq("event_id", eventId)
+      .single();
+
+    if (existing?.status === "failed" || existing?.status === "processing") {
+      // Prior attempt failed or stalled — allow retry
+      await supabase
+        .from("stripe_webhook_events")
+        .update({ status: "processing", error_message: null })
+        .eq("event_id", eventId);
+      diagLog("info", eventId, eventType, `Retrying previously ${existing.status} event`);
+      return "new";
+    }
+
     console.log(`[stripe-webhook] Duplicate event skipped: ${eventId}`);
     return "duplicate";
   }

@@ -151,8 +151,28 @@ export async function POST(request: NextRequest) {
         return new Response(JSON.stringify({ error: "不明なプロバイダー" }), { status: 400 });
     }
 
-    // Tee stream: one branch to client, one to monitor completion/error
-    const [clientStream, monitorStream] = stream.tee();
+    // Wrap stream to detect both upstream errors and client disconnects
+    let delivered = false;
+    const safeStream = stream.pipeThrough(
+      new TransformStream({
+        transform(chunk, controller) {
+          controller.enqueue(chunk);
+        },
+        flush() {
+          delivered = true;
+        },
+      })
+    );
+
+    // Refund on client abort (disconnect)
+    request.signal.addEventListener("abort", () => {
+      if (!delivered) {
+        void refundCredits(billing.userId, "chat");
+      }
+    });
+
+    // Monitor upstream completion in background
+    const [clientStream, monitorStream] = safeStream.tee();
 
     void (async () => {
       try {
