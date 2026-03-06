@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
 
   const billing = await reserveCredits("chat");
   if (isBillingError(billing)) {
-    return new Response(JSON.stringify({ error: "クレジットが不足しています" }), { status: 402 });
+    return billing.response;
   }
 
   try {
@@ -151,9 +151,20 @@ export async function POST(request: NextRequest) {
         return new Response(JSON.stringify({ error: "不明なプロバイダー" }), { status: 400 });
     }
 
-    void logUsage(billing.userId, "chat", billing.cost, { provider: body.llm_provider });
+    // Tee stream: one branch to client, one to monitor completion/error
+    const [clientStream, monitorStream] = stream.tee();
 
-    return new Response(stream, {
+    void (async () => {
+      try {
+        const reader = monitorStream.getReader();
+        while (!(await reader.read()).done) { /* drain */ }
+        void logUsage(billing.userId, "chat", billing.cost, { provider: body.llm_provider });
+      } catch {
+        await refundCredits(billing.userId, "chat");
+      }
+    })();
+
+    return new Response(clientStream, {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",

@@ -62,7 +62,7 @@ async function checkIdempotency(
   supabase: Awaited<ReturnType<typeof createServerSupabaseAdmin>>,
   eventId: string,
   eventType: string
-): Promise<"new" | "duplicate"> {
+): Promise<"new" | "duplicate" | "error"> {
   const { error } = await supabase.from("stripe_webhook_events").insert({
     event_id: eventId,
     event_type: eventType,
@@ -75,8 +75,9 @@ async function checkIdempotency(
     return "duplicate";
   }
   if (error) {
-    // Non-duplicate DB error - log but proceed (fail-open for availability)
+    // Non-duplicate DB error must fail-closed to avoid duplicate side effects.
     console.error(`[stripe-webhook] Idempotency check error:`, error);
+    return "error";
   }
   return "new";
 }
@@ -230,6 +231,9 @@ export async function POST(request: NextRequest) {
   if (idempotencyResult === "duplicate") {
     return NextResponse.json({ received: true, duplicate: true });
   }
+  if (idempotencyResult === "error") {
+    return NextResponse.json({ error: "Idempotency check failed" }, { status: 500 });
+  }
 
   try {
     switch (eventType) {
@@ -343,24 +347,24 @@ async function handleCheckoutCompleted(
       diagLog("warn", eventId, eventType, `Unknown pack priceId: ${priceId}`);
       return;
     }
-
-    const { data: userData } = await supabase
-      .from("users")
-      .select("ai_credits_remaining")
-      .eq("id", userId)
-      .single();
-
-    const currentCredits = userData?.ai_credits_remaining ?? 0;
-    const newCredits = packInfo.credits === -1 ? 999999 : currentCredits + packInfo.credits;
-
-    const result = await supabase
-      .from("users")
-      .update({
-        ai_credits_remaining: newCredits,
-      })
-      .eq("id", userId);
-
-    assertUpdateSucceeded(result, "credit_purchase", eventId, eventType);
+    let newCredits = 0;
+    if (packInfo.credits === -1) {
+      const result = await supabase
+        .from("users")
+        .update({ ai_credits_remaining: 999999 })
+        .eq("id", userId);
+      assertUpdateSucceeded(result, "credit_purchase_lifetime", eventId, eventType);
+      newCredits = 999999;
+    } else {
+      const { data: remaining, error: creditError } = await supabase.rpc("refund_credits", {
+        p_user_id: userId,
+        p_amount: packInfo.credits,
+      });
+      if (creditError) {
+        throw new Error(`credit_purchase rpc failed: ${JSON.stringify(creditError)}`);
+      }
+      newCredits = typeof remaining === "number" ? remaining : 0;
+    }
 
     await supabase.from("ai_usage_log").insert({
       user_id: userId,
@@ -369,7 +373,7 @@ async function handleCheckoutCompleted(
       metadata: { pack: packInfo.tier, credits_added: packInfo.credits, event_id: eventId },
     });
 
-    diagLog("info", eventId, eventType, `Credits purchased: pack=${packInfo.tier}, added=${packInfo.credits}`);
+    diagLog("info", eventId, eventType, `Credits purchased: pack=${packInfo.tier}, added=${packInfo.credits}, remaining=${newCredits}`);
   }
 }
 
@@ -521,5 +525,5 @@ function mapStripeStatus(status: string): string {
     incomplete_expired: "canceled",
     paused: "canceled",
   };
-  return statusMap[status] ?? "active";
+  return statusMap[status] ?? "past_due";
 }
