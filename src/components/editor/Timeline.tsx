@@ -2,6 +2,13 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useEditorStore } from "@/stores/editorStore";
+import {
+  MagnifyingGlassMinus,
+  MagnifyingGlassPlus,
+  VideoCamera,
+  MusicNote,
+  Trash,
+} from "@phosphor-icons/react";
 import type { Track, Clip } from "@/types";
 
 export function Timeline() {
@@ -131,7 +138,7 @@ export function Timeline() {
 
   if (!project) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+      <div className="h-full flex items-center justify-center text-[var(--color-text-muted)]">
         <p>プロジェクトを作成してください</p>
       </div>
     );
@@ -145,7 +152,7 @@ export function Timeline() {
 
   return (
     <div
-      className="h-full flex flex-col bg-dark-900 rounded-lg overflow-hidden"
+      className="h-full flex flex-col bg-dark-900 rounded-[var(--radius-lg)] overflow-hidden"
       onWheel={handleWheel}
     >
       {/* Toolbar */}
@@ -161,14 +168,7 @@ export function Timeline() {
             className="p-1 text-gray-400 hover:text-white"
             title="ズームアウト"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
-              />
-            </svg>
+            <MagnifyingGlassMinus size={20} weight="bold" />
           </button>
           <span className="text-xs text-gray-500 w-12 text-center">
             {Math.round(zoom * 100)}%
@@ -178,14 +178,7 @@ export function Timeline() {
             className="p-1 text-gray-400 hover:text-white"
             title="ズームイン"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
-              />
-            </svg>
+            <MagnifyingGlassPlus size={20} weight="bold" />
           </button>
         </div>
       </div>
@@ -203,39 +196,15 @@ export function Timeline() {
               key={track.id}
               className={`
                 group h-16 flex items-center justify-between px-3 border-b border-dark-700 cursor-pointer
-                ${selectedTrackId === track.id ? "bg-primary-900/20" : "hover:bg-dark-700"}
+                ${selectedTrackId === track.id ? "bg-[var(--color-accent-soft)]" : "hover:bg-dark-700"}
               `}
               onClick={() => selectTrack(track.id)}
             >
               <div className="flex items-center gap-2">
                 {track.type === "video" ? (
-                  <svg
-                    className="w-4 h-4 text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
-                  </svg>
+                  <VideoCamera size={16} weight="bold" className="text-blue-400" />
                 ) : (
-                  <svg
-                    className="w-4 h-4 text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-                    />
-                  </svg>
+                  <MusicNote size={16} weight="bold" className="text-green-400" />
                 )}
                 <span className="text-sm text-gray-300 truncate">{track.name}</span>
               </div>
@@ -246,19 +215,7 @@ export function Timeline() {
                 }}
                 className="p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
+                <Trash size={16} weight="bold" />
               </button>
             </div>
           ))}
@@ -394,7 +351,7 @@ function TrackRow({
               }}
               className="absolute -top-2 -right-2 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-700"
             >
-              ×
+              x
             </button>
           )}
         </div>

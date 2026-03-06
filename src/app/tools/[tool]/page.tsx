@@ -63,18 +63,18 @@ export default async function ToolPage({
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100 dark:bg-dark-950">
+    <div className="h-screen flex flex-col bg-[var(--color-bg)]">
       <Header />
-      <div className="border-b border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-900">
+      <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-lg sm:text-2xl font-bold text-[var(--color-text)]">
             {config.title}
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1">
+          <p className="text-sm sm:text-base text-[var(--color-text-muted)] mt-1">
             {config.description}
           </p>
           {config.notice && (
-            <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 mt-2">
+            <p className="text-xs sm:text-sm text-[var(--color-accent-text)] mt-2">
               {config.notice}
             </p>
           )}

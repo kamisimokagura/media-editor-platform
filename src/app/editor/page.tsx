@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Header, Sidebar } from "@/components/layout";
 import { VideoPreview, Timeline } from "@/components/editor";
-import { DropZone, ProgressBar } from "@/components/ui";
+import { Button, DropZone, ProgressBar } from "@/components/ui";
 import { useEditorStore } from "@/stores/editorStore";
 import { useFFmpeg } from "@/hooks/useFFmpeg";
 import { toast } from "@/stores/toastStore";
@@ -47,7 +47,7 @@ function FfmpegStatusCard({
   onRetry,
 }: FfmpegStatusCardProps) {
   return (
-    <div className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-lg">
+    <div className="bg-[var(--color-surface)] rounded-2xl p-6 shadow-[var(--shadow-lg)]">
       <div className="flex items-center gap-3 mb-3">
         <div
           className={`w-3 h-3 rounded-full ${
@@ -58,32 +58,29 @@ function FfmpegStatusCard({
                 : "bg-yellow-500 animate-pulse shadow-lg shadow-yellow-500/30"
           }`}
         />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <span className="text-sm font-medium text-[var(--color-text-muted)]">
           {ffmpegLoaded ? "FFmpeg ready" : ffmpegError ? "FFmpeg load failed" : "Loading FFmpeg..."}
         </span>
       </div>
 
       {ffmpegError && (
         <div className="mt-4">
-          <p className="text-xs text-red-600 dark:text-red-400 mb-4 leading-relaxed">{ffmpegError}</p>
-          <button
-            onClick={onRetry}
-            className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20"
-          >
+          <p className="text-xs text-red-500 mb-4 leading-relaxed">{ffmpegError}</p>
+          <Button variant="primary" onClick={onRetry} className="w-full">
             Retry
-          </button>
+          </Button>
         </div>
       )}
 
       {isLoadingFFmpeg && !ffmpegError && (
         <div className="mt-4">
-          <div className="w-full h-2 bg-gray-200 dark:bg-dark-700 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse"
+              className="h-full bg-[var(--color-accent)] rounded-full animate-pulse"
               style={{ width: "60%" }}
             />
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          <p className="text-xs text-[var(--color-text-muted)] mt-2">
             First load can take a little time depending on your network.
           </p>
         </div>
@@ -96,7 +93,7 @@ function FfmpegStatusCard({
       )}
 
       {ffmpegLoaded && processingState.status !== "processing" && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Ready for local browser-side processing.</p>
+        <p className="text-xs text-[var(--color-text-muted)] mt-2">Ready for local browser-side processing.</p>
       )}
     </div>
   );
@@ -251,7 +248,7 @@ export default function EditorPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-dark-950">
+    <div className="min-h-screen flex flex-col bg-[var(--color-bg)]">
       <Header />
 
       <div className="flex-1 flex overflow-hidden">
@@ -266,7 +263,7 @@ export default function EditorPage() {
                 <DropZone
                   onFilesSelected={handleFilesSelected}
                   accept="all"
-                  className="min-h-[320px] bg-white dark:bg-dark-800 rounded-2xl shadow-lg"
+                  className="min-h-[320px] bg-[var(--color-surface)] rounded-2xl shadow-[var(--shadow-lg)]"
                 />
               </div>
               <div className="w-full max-w-3xl">
@@ -294,7 +291,7 @@ export default function EditorPage() {
                   <DropZone
                     onFilesSelected={handleFilesSelected}
                     accept="all"
-                    className="min-h-[260px] bg-white dark:bg-dark-800 rounded-2xl shadow-lg"
+                    className="min-h-[260px] bg-[var(--color-surface)] rounded-2xl shadow-[var(--shadow-lg)]"
                   />
                   <FfmpegStatusCard
                     ffmpegLoaded={ffmpegLoaded}
@@ -308,7 +305,7 @@ export default function EditorPage() {
                 </div>
               </div>
 
-              <div className="h-56 sm:h-64 min-h-[200px] bg-white dark:bg-dark-800 rounded-2xl shadow-lg overflow-hidden">
+              <div className="h-56 sm:h-64 min-h-[200px] bg-[var(--color-surface)] rounded-2xl shadow-[var(--shadow-lg)] overflow-hidden">
                 <Timeline />
               </div>
             </>

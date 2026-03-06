@@ -3,6 +3,7 @@
 import React from "react";
 import { Button, Slider } from "@/components/ui";
 import { AIToolbar } from "@/components/ai";
+import { SquaresFour } from "@phosphor-icons/react";
 import type { ImageAdjustments } from "@/types";
 import {
   ADJUSTMENT_CONTROLS,
@@ -65,7 +66,7 @@ export function CropPanel({
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+        <h4 className="text-sm font-medium text-[var(--color-text-muted)] mb-3">
           アスペクト比
         </h4>
         <div className="grid grid-cols-3 gap-2">
@@ -73,10 +74,10 @@ export function CropPanel({
             <button
               key={ratio}
               onClick={() => setCropAspectRatio(ratio)}
-              className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+              className={`px-3 py-2 text-sm rounded-[var(--radius-md)] transition-colors ${
                 cropAspectRatio === ratio
-                  ? "bg-primary-600 text-white"
-                  : "bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-600"
+                  ? "bg-[var(--color-accent)] text-white"
+                  : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-text)]"
               }`}
             >
               {ratio === "free" ? "自由" : ratio}
@@ -85,8 +86,8 @@ export function CropPanel({
         </div>
       </div>
 
-      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <p className="text-sm text-blue-700 dark:text-blue-300">
+      <div className="p-4 bg-[var(--color-accent-soft)] rounded-[var(--radius-md)]">
+        <p className="text-sm text-[var(--color-accent-text)]">
           {variant === "mobile"
             ? "パネルを閉じて画像上でドラッグしてください"
             : "画像上でドラッグして範囲を選択してください"}
@@ -94,7 +95,7 @@ export function CropPanel({
       </div>
 
       {cropRect.width > 10 && cropRect.height > 10 && (
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-sm text-[var(--color-text-muted)]">
           <p>選択範囲: {Math.round(cropRect.width)} x {Math.round(cropRect.height)}</p>
         </div>
       )}
@@ -148,26 +149,26 @@ export function ResizePanel({
     <div className="space-y-6">
       <div className={isMobile ? "grid grid-cols-2 gap-3" : undefined}>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
             幅 (px)
           </label>
           <input
             type="number"
             value={resizeWidth}
             onChange={(e) => onResizeWidthChange(parseInt(e.target.value) || 0)}
-            className="w-full px-3 py-2 bg-gray-100 dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
           />
         </div>
 
         <div className={isMobile ? undefined : "mt-4"}>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-2">
             高さ (px)
           </label>
           <input
             type="number"
             value={resizeHeight}
             onChange={(e) => onResizeHeightChange(parseInt(e.target.value) || 0)}
-            className="w-full px-3 py-2 bg-gray-100 dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
           />
         </div>
       </div>
@@ -177,13 +178,13 @@ export function ResizePanel({
           type="checkbox"
           checked={resizeMaintainAspect}
           onChange={(e) => onMaintainAspectChange(e.target.checked)}
-          className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+          className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
         />
-        <span className="text-sm text-gray-700 dark:text-gray-300">縦横比を維持</span>
+        <span className="text-sm text-[var(--color-text-muted)]">縦横比を維持</span>
       </label>
 
       <div>
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+        <h4 className="text-sm font-medium text-[var(--color-text-muted)] mb-3">
           プリセット
         </h4>
         <div className={`grid gap-2 ${isMobile ? "grid-cols-4" : "grid-cols-2"}`}>
@@ -196,7 +197,7 @@ export function ResizePanel({
                   onResizeHeightChange(Math.round(originalImageData.height * preset.factor));
                 }
               }}
-              className="px-3 py-2 text-sm bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-dark-600 transition-colors"
+              className="px-3 py-2 text-sm bg-[var(--color-bg)] text-[var(--color-text-muted)] rounded-[var(--radius-md)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-text)] transition-colors"
             >
               {preset.label}
             </button>
@@ -239,12 +240,12 @@ export function FiltersPanel({
           <button
             key={cat.id}
             onClick={() => setFilterCategory(cat.id)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] transition-colors ${
               isMobile ? "whitespace-nowrap" : ""
             } ${
               filterCategory === cat.id
-                ? "bg-primary-600 text-white"
-                : "bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-600"
+                ? "bg-[var(--color-accent)] text-white"
+                : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-text)]"
             }`}
           >
             {cat.label}
@@ -268,7 +269,7 @@ export function FiltersPanel({
           <button
             key={filter.id}
             onClick={() => onApplyFilter(filter)}
-            className="group relative overflow-hidden rounded-xl border-2 border-gray-200 dark:border-dark-600 hover:border-primary-500 dark:hover:border-primary-400 transition-all duration-200 cursor-pointer hover:shadow-lg"
+            className="group relative overflow-hidden rounded-[var(--radius-lg)] border-2 border-[var(--color-border)] hover:border-[var(--color-accent)] transition-all duration-200 cursor-pointer hover:shadow-[var(--shadow-md)]"
           >
             <div className={`aspect-[4/3] bg-gradient-to-br ${filter.gradient}`} />
             <div className="absolute inset-x-0 bottom-0 bg-black/60 backdrop-blur-sm py-1.5 px-2">
@@ -316,14 +317,12 @@ export function ToolsPanel({
 
   return (
     <div className="space-y-5">
-      <div className="p-4 bg-gray-50 dark:bg-dark-700 rounded-xl">
-        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-          </svg>
+      <div className="p-4 bg-[var(--color-bg)] rounded-[var(--radius-lg)]">
+        <h4 className="text-sm font-semibold text-[var(--color-text)] mb-3 flex items-center gap-2">
+          <SquaresFour size={16} weight="bold" />
           モザイクツール
         </h4>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+        <p className="text-xs text-[var(--color-text-muted)] mb-4">
           {isMobile
             ? "パネルを閉じて画像上をなぞると、その範囲にモザイクがかかります。"
             : "画像上をなぞってモザイクをかけたい範囲を指定します。"}

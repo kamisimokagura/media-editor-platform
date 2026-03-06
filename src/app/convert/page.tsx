@@ -5,11 +5,19 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { Header } from "@/components/layout";
 import { useFFmpeg } from "@/hooks/useFFmpeg";
 import { useEditorStore } from "@/stores/editorStore";
-import { Button, DropZone, ProgressBar, Slider } from "@/components/ui";
+import { Button, Card, DropZone, ProgressBar, Slider } from "@/components/ui";
 import { ANALYTICS_EVENTS, trackClientEvent, trackPageView } from "@/lib/analytics/client";
 import { toast } from "@/stores/toastStore";
 import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
 import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
+import {
+  VideoCamera,
+  ImageSquare,
+  Check,
+  X,
+  FilmStrip,
+  Info,
+} from "@phosphor-icons/react";
 import type { ConversionOptions, OutputFormat } from "@/types";
 
 type MediaMode = "video" | "image";
@@ -368,46 +376,48 @@ export default function ConvertPage() {
   const doneCount = queue.filter((q) => q.status === "done").length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-950">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       <Header />
 
       <div className="w-full flex justify-center">
         <div className="w-full max-w-5xl px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
           <div className="text-center mb-10">
-            <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+            <h1 className="text-2xl sm:text-4xl font-bold text-[var(--color-text)] mb-3">
               メディア変換ツール
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+            <p className="text-sm sm:text-base text-[var(--color-text-muted)]">
               動画・画像をブラウザ内で変換。複数ファイルの一括変換にも対応しています。
             </p>
           </div>
 
           <div className="flex justify-center mb-8">
-            <div className="w-full max-w-md inline-grid grid-cols-2 bg-white dark:bg-dark-800 rounded-2xl p-1.5 shadow-lg">
+            <div className="w-full max-w-md inline-grid grid-cols-2 bg-[var(--color-surface)] rounded-2xl p-1.5 shadow-[var(--shadow-lg)]">
               <button
                 onClick={() => { setMode("video"); clearQueue(); }}
-                className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   mode === "video"
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                    ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-md)]"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                 }`}
               >
+                <VideoCamera size={18} weight="bold" />
                 動画変換
               </button>
               <button
                 onClick={() => { setMode("image"); clearQueue(); }}
-                className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   mode === "image"
-                    ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                    ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-md)]"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                 }`}
               >
+                <ImageSquare size={18} weight="bold" />
                 画像変換
               </button>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-dark-800 rounded-3xl shadow-xl p-5 sm:p-8 overflow-hidden">
+          <Card className="p-5 sm:p-8 overflow-hidden">
             {/* Drop zone - always visible when not processing */}
             <div className="mb-8">
               <DropZone
@@ -423,9 +433,9 @@ export default function ConvertPage() {
             {queue.length > 0 && (
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-sm font-semibold text-[var(--color-text)]">
                     ファイル一覧
-                    <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                    <span className="ml-2 text-xs font-normal text-[var(--color-text-muted)]">
                       {queue.length}件{doneCount > 0 ? ` (${doneCount}件完了)` : ""}
                     </span>
                   </h3>
@@ -438,35 +448,33 @@ export default function ConvertPage() {
                   {queue.map((item) => (
                     <div
                       key={item.id}
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                      className={`flex items-center gap-3 p-3 rounded-[var(--radius-lg)] transition-colors ${
                         item.status === "done"
                           ? "bg-green-50 dark:bg-green-900/10"
                           : item.status === "error"
                           ? "bg-red-50 dark:bg-red-900/10"
                           : item.status === "processing"
-                          ? "bg-blue-50 dark:bg-blue-900/10"
-                          : "bg-gray-50 dark:bg-dark-700"
+                          ? "bg-[var(--color-accent-soft)]"
+                          : "bg-[var(--color-bg)]"
                       }`}
                     >
                       {/* Thumbnail */}
                       {item.previewUrl && mode === "image" ? (
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 dark:bg-dark-600 flex-shrink-0">
+                        <div className="w-10 h-10 rounded-[var(--radius-md)] overflow-hidden bg-[var(--color-border)] flex-shrink-0">
                           <img src={item.previewUrl} alt="" className="w-full h-full object-cover" />
                         </div>
                       ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
+                        <div className="w-10 h-10 bg-[var(--color-accent)] rounded-[var(--radius-md)] flex items-center justify-center flex-shrink-0">
+                          <FilmStrip size={20} weight="bold" className="text-white" />
                         </div>
                       )}
 
                       {/* File info */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        <p className="text-sm font-medium text-[var(--color-text)] truncate">
                           {item.file.name}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-[var(--color-text-muted)]">
                           {(item.file.size / 1024 / 1024).toFixed(2)} MB
                           {item.dimensions && ` • ${item.dimensions.width}x${item.dimensions.height}`}
                         </p>
@@ -475,26 +483,20 @@ export default function ConvertPage() {
                       {/* Status indicator */}
                       <div className="flex-shrink-0">
                         {item.status === "done" && (
-                          <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <Check size={20} weight="bold" className="text-green-500" />
                         )}
                         {item.status === "error" && (
-                          <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
+                          <X size={20} weight="bold" className="text-red-500" />
                         )}
                         {item.status === "processing" && (
-                          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                          <div className="w-5 h-5 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
                         )}
                         {item.status === "pending" && !isProcessing && (
                           <button
                             onClick={() => removeFromQueue(item.id)}
-                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                            className="p-1 text-[var(--color-text-muted)] hover:text-red-500 transition-colors"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X size={16} weight="bold" />
                           </button>
                         )}
                       </div>
@@ -508,16 +510,16 @@ export default function ConvertPage() {
             {queue.length > 0 && mode === "video" && (
               <div className="space-y-7 mb-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">出力形式</label>
+                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">出力形式</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     {videoFormatOptions.map(({ value, label }) => (
                       <button
                         key={value}
                         onClick={() => setVideoOptions({ ...videoOptions, format: value })}
-                        className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                        className={`px-4 py-3 rounded-[var(--radius-lg)] text-sm font-medium transition-all ${
                           videoOptions.format === value
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                            : "bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-600"
+                            ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-md)]"
+                            : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-text)]"
                         }`}
                       >
                         {label}
@@ -531,7 +533,7 @@ export default function ConvertPage() {
                   />
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">解像度</label>
+                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">解像度</label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
                       { label: "元のまま", width: undefined, height: undefined },
@@ -542,10 +544,10 @@ export default function ConvertPage() {
                       <button
                         key={label}
                         onClick={() => setVideoOptions({ ...videoOptions, width, height })}
-                        className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        className={`px-3 py-2.5 rounded-[var(--radius-lg)] text-sm font-medium transition-all ${
                           videoOptions.width === width
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                            : "bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-600"
+                            ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-md)]"
+                            : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-text)]"
                         }`}
                       >
                         {label}
@@ -559,20 +561,20 @@ export default function ConvertPage() {
             {queue.length > 0 && mode === "image" && (
               <div className="space-y-7 mb-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">出力形式</label>
+                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">出力形式</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     {imageFormatOptions.map(({ value, label, description }) => (
                       <button
                         key={value}
                         onClick={() => setImageFormat(value)}
-                        className={`px-4 py-4 rounded-xl text-sm font-medium transition-all text-center ${
+                        className={`px-4 py-4 rounded-[var(--radius-lg)] text-sm font-medium transition-all text-center ${
                           imageFormat === value
-                            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg"
-                            : "bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-600"
+                            ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-md)]"
+                            : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-text)]"
                         }`}
                       >
                         <span className="block font-semibold">{label}</span>
-                        <span className={`block text-xs mt-1 ${imageFormat === value ? "text-white/80" : "text-gray-500"}`}>
+                        <span className={`block text-xs mt-1 ${imageFormat === value ? "text-white/80" : "text-[var(--color-text-muted)]"}`}>
                           {description}
                         </span>
                       </button>
@@ -581,24 +583,24 @@ export default function ConvertPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">出力タイプ</label>
-                  <div className="inline-flex bg-gray-100 dark:bg-dark-700 rounded-xl p-1">
+                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">出力タイプ</label>
+                  <div className="inline-flex bg-[var(--color-bg)] rounded-[var(--radius-lg)] p-1">
                     <button
                       onClick={() => setImageOutputMode("file")}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-colors ${
                         imageOutputMode === "file"
-                          ? "bg-white dark:bg-dark-600 text-gray-900 dark:text-white shadow-sm"
-                          : "text-gray-600 dark:text-gray-300"
+                          ? "bg-[var(--color-surface)] text-[var(--color-text)] shadow-[var(--shadow-sm)]"
+                          : "text-[var(--color-text-muted)]"
                       }`}
                     >
                       ファイル
                     </button>
                     <button
                       onClick={() => setImageOutputMode("base64")}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-colors ${
                         imageOutputMode === "base64"
-                          ? "bg-white dark:bg-dark-600 text-gray-900 dark:text-white shadow-sm"
-                          : "text-gray-600 dark:text-gray-300"
+                          ? "bg-[var(--color-surface)] text-[var(--color-text)] shadow-[var(--shadow-sm)]"
+                          : "text-[var(--color-text-muted)]"
                       }`}
                     >
                       Base64
@@ -621,10 +623,10 @@ export default function ConvertPage() {
                         <button
                           key={preset.value}
                           onClick={() => setImageQuality(preset.value)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          className={`px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-medium transition-all ${
                             imageQuality === preset.value
-                              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md"
-                              : "bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-600"
+                              ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-sm)]"
+                              : "bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-text)]"
                           }`}
                         >
                           {preset.label}
@@ -656,7 +658,7 @@ export default function ConvertPage() {
                       onClick={handleConvertAll}
                       isLoading={isLoading || isProcessing}
                       disabled={!ffmpegLoaded && !isLoading}
-                      className="flex-1 !py-4 bg-gradient-to-r from-blue-600 to-purple-600"
+                      className="flex-1 !py-4"
                     >
                       {isLoading && !ffmpegLoaded
                         ? "FFmpeg loading..."
@@ -676,7 +678,7 @@ export default function ConvertPage() {
                     variant="primary"
                     onClick={handleConvertAll}
                     isLoading={isProcessing}
-                    className="flex-1 !py-4 bg-gradient-to-r from-purple-600 to-pink-600"
+                    className="flex-1 !py-4"
                   >
                     {imageOutputMode === "base64"
                       ? `${pendingCount}件を Base64 に変換`
@@ -688,9 +690,9 @@ export default function ConvertPage() {
 
             {/* Base64 result */}
             {base64Result && (
-              <div className="mt-8 p-4 sm:p-5 bg-gray-50 dark:bg-dark-700 rounded-2xl">
+              <div className="mt-8 p-4 sm:p-5 bg-[var(--color-bg)] rounded-2xl">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Base64 出力</h3>
+                  <h3 className="font-semibold text-[var(--color-text)]">Base64 出力</h3>
                   <div className="flex gap-2">
                     <Button variant="secondary" size="sm" onClick={handleCopyBase64}>Copy</Button>
                     <Button variant="secondary" size="sm" onClick={handleDownloadBase64}>Download .txt</Button>
@@ -699,17 +701,18 @@ export default function ConvertPage() {
                 <textarea
                   value={base64Result}
                   readOnly
-                  className="w-full min-h-[180px] max-h-[320px] p-3 text-xs font-mono bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-600 rounded-xl text-gray-800 dark:text-gray-200"
+                  className="w-full min-h-[180px] max-h-[320px] p-3 text-xs font-mono bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] text-[var(--color-text)]"
                 />
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                   Length: {base64Result.length.toLocaleString()} characters
                 </p>
               </div>
             )}
-          </div>
+          </Card>
 
-          <div className="mt-6 p-4 sm:p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
-            <p className="text-sm text-blue-700 dark:text-blue-400 leading-relaxed">
+          <div className="mt-6 p-4 sm:p-6 bg-[var(--color-accent-soft)] rounded-2xl flex items-start gap-3">
+            <Info size={20} weight="bold" className="text-[var(--color-accent-text)] flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-[var(--color-accent-text)] leading-relaxed">
               すべての処理はブラウザ内で実行されます。ファイルがサーバーにアップロードされることはありません。
             </p>
           </div>
