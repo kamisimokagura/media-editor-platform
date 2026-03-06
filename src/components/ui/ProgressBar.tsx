@@ -20,20 +20,20 @@ export function ProgressBar({
       {(message || showPercentage) && (
         <div className="flex justify-between items-center mb-2">
           {message && (
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-[var(--color-text-muted)]">
               {message}
             </span>
           )}
           {showPercentage && (
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-sm font-medium text-[var(--color-text)]">
               {Math.round(clampedProgress)}%
             </span>
           )}
         </div>
       )}
-      <div className="w-full h-2 bg-gray-200 rounded-full dark:bg-gray-700 overflow-hidden">
+      <div className="w-full h-2 bg-[var(--color-border)] rounded-[var(--radius-full)] overflow-hidden">
         <div
-          className="h-full bg-primary-600 rounded-full transition-all duration-300 ease-out"
+          className="h-full bg-[var(--color-accent)] rounded-[var(--radius-full)] transition-all duration-300 ease-out"
           style={{ width: `${clampedProgress}%` }}
         >
           {clampedProgress > 0 && clampedProgress < 100 && (

@@ -56,7 +56,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
         {(label || showValue) && (
           <div className="flex justify-between items-center mb-2">
             {label && (
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-medium text-[var(--color-text)]">
                 {label}
               </label>
             )}
@@ -71,12 +71,12 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
                   onKeyDown={handleEditKeyDown}
                   min={min}
                   max={max}
-                  className="w-16 px-1.5 py-0.5 text-sm text-right bg-white dark:bg-dark-700 border border-primary-500 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="w-16 px-1.5 py-0.5 text-sm text-right bg-[var(--color-bg)] border border-[var(--color-accent)] rounded-[var(--radius-md)] text-[var(--color-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
                 />
               ) : (
                 <button
                   onClick={handleValueClick}
-                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-dark-700 px-1.5 py-0.5 rounded-md transition-colors cursor-text tabular-nums"
+                  className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-border)] px-1.5 py-0.5 rounded-[var(--radius-md)] transition-colors cursor-text tabular-nums"
                   title="クリックして数値を直接入力"
                 >
                   {value}
@@ -93,7 +93,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(
           min={min}
           max={max}
           onChange={onChange}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+          className="w-full h-2 bg-[var(--color-border)] rounded-[var(--radius-full)] appearance-none cursor-pointer accent-[var(--color-accent)]"
           {...props}
         />
       </div>
