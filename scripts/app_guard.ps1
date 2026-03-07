@@ -202,9 +202,9 @@ function Invoke-TextSearchRegex {
 }
 
 function Check-HardcodedHttp {
-  $hits = Invoke-TextSearchSimple -Needle "http://" -SearchRoot "src"
+  $hits = @(Invoke-TextSearchSimple -Needle "http://" -SearchRoot "src")
 
-  if (-not $hits -or $hits.Count -eq 0) {
+  if ($hits.Count -eq 0) {
     Add-Result -Id "security.http_literal" -Status "pass" -Message "No http:// literals found in src."
     return
   }
@@ -254,9 +254,9 @@ function Check-OriginHandling {
     Add-Result -Id "security.origin_helper_usage" -Status "fail" -Message ("Missing origin safety helper usage in: " + ($missing -join ", "))
   }
 
-  $rawOriginReads = Invoke-TextSearchRegex -Pattern 'headers\.get\("origin"\)' -SearchRoot "src/app/api"
+  $rawOriginReads = @(Invoke-TextSearchRegex -Pattern 'headers\.get\("origin"\)' -SearchRoot "src/app/api")
 
-  if (-not $rawOriginReads -or $rawOriginReads.Count -eq 0) {
+  if ($rawOriginReads.Count -eq 0) {
     Add-Result -Id "security.raw_origin_reads" -Status "pass" -Message "No direct origin header reads in API routes."
     return
   }
