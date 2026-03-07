@@ -18,11 +18,11 @@ export function CreditGate({ creditsNeeded, children, fallback }: CreditGateProp
     return (
       <>
         {fallback ?? (
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-            <p className="text-sm text-amber-400 mb-2">
+          <div className="p-4 rounded-[var(--radius-lg)] bg-[var(--color-warning-soft)] border border-[var(--color-warning)] text-center">
+            <p className="text-sm text-[var(--color-warning)] mb-2">
               クレジットが不足しています (必要: {creditsNeeded}cr)
             </p>
-            <a href="/subscription" className="text-xs text-purple-400 hover:text-purple-300 underline">
+            <a href="/subscription" className="text-xs text-[var(--color-accent-text)] hover:text-[var(--color-accent)] underline">
               クレジットを購入
             </a>
           </div>

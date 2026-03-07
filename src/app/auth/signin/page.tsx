@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft } from "@phosphor-icons/react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { ANALYTICS_EVENTS, trackClientEvent, trackPageView } from "@/lib/analytics/client";
 import { toast } from "@/stores/toastStore";
@@ -127,7 +128,7 @@ function SignInContent() {
 
   return (
     <div className="w-full max-w-lg">
-      <div className="bg-white dark:bg-dark-800 rounded-3xl shadow-xl p-6 sm:p-8 lg:p-10">
+      <div className="bg-[var(--color-surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] p-6 sm:p-8 lg:p-10">
         <div className="text-center mb-8 sm:mb-10">
           <Link href="/" className="inline-flex items-center gap-3 mb-6">
             <div className="w-12 h-12 bg-gradient-to-br from-violet-600 via-blue-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
@@ -137,13 +138,13 @@ function SignInContent() {
                 <circle cx="18" cy="9" r="0.8" fill="currentColor" opacity="0.5"/>
               </svg>
             </div>
-            <span className="font-bold text-2xl text-gray-900 dark:text-white">MediEdi!</span>
+            <span className="font-bold text-2xl text-[var(--color-text)]">MediEdi!</span>
           </Link>
 
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl font-bold text-[var(--color-text)] mb-2">
             {mode === "signin" ? "ログイン" : "新規登録"}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-[var(--color-text-muted)]">
             {mode === "signin"
               ? "アカウントにログインして続行してください"
               : "アカウントを作成して開始しましょう"}
@@ -151,8 +152,8 @@ function SignInContent() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-            <p className="text-sm text-red-700 dark:text-red-300">{decodeURIComponent(error)}</p>
+          <div className="mb-6 p-4 bg-[var(--color-error-soft)] border border-[var(--color-error)] rounded-[var(--radius-lg)]">
+            <p className="text-sm text-[var(--color-error)]">{decodeURIComponent(error)}</p>
           </div>
         )}
 
@@ -162,7 +163,7 @@ function SignInContent() {
               key={provider.id}
               onClick={() => handleSocialSignIn(provider.id)}
               disabled={isLoading}
-              className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-200 dark:border-dark-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-lg)] text-[var(--color-text)] hover:bg-[var(--color-accent-soft)] transition-colors disabled:opacity-50"
             >
               {provider.icon}
               <span className="text-sm font-medium">{provider.name}</span>
@@ -172,10 +173,10 @@ function SignInContent() {
 
         <div className="relative mb-7">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200 dark:border-dark-600" />
+            <div className="w-full border-t border-[var(--color-border)]" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white dark:bg-dark-800 text-gray-500 dark:text-gray-400">
+            <span className="px-4 bg-[var(--color-surface)] text-[var(--color-text-muted)]">
               または
             </span>
           </div>
@@ -184,7 +185,7 @@ function SignInContent() {
         <form onSubmit={handleEmailAuth} className="space-y-5">
           {mode === "signup" && (
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="fullName" className="block text-sm font-medium text-[var(--color-text)] mb-2">
                 お名前
               </label>
               <input
@@ -192,14 +193,14 @@ function SignInContent() {
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-dark-700 dark:text-white transition-all"
+                className="w-full px-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-bg)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
                 placeholder="山田 太郎"
               />
             </div>
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-[var(--color-text)] mb-2">
               メールアドレス
             </label>
             <input
@@ -207,14 +208,14 @@ function SignInContent() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-dark-700 dark:text-white transition-all"
+              className="w-full px-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-bg)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
               placeholder="you@example.com"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-[var(--color-text)] mb-2">
               パスワード
             </label>
             <div className="relative">
@@ -223,7 +224,7 @@ function SignInContent() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-12 border border-gray-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-dark-700 dark:text-white transition-all"
+                className="w-full px-4 py-3 pr-12 border border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-bg)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -231,49 +232,47 @@ function SignInContent() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
               >
                 {showPassword ? "非表示" : "表示"}
               </button>
             </div>
             {mode === "signup" && (
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">8文字以上で入力してください</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">8文字以上で入力してください</p>
             )}
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 hover:opacity-95 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3.5 px-4 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] font-semibold rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] hover:opacity-95 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "処理中..." : mode === "signin" ? "ログイン" : "新規登録"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-6 text-center text-sm text-[var(--color-text-muted)]">
           {mode === "signin" ? "アカウントをお持ちでないですか？ " : "すでにアカウントをお持ちですか？ "}
           <button
             onClick={() => setMode((prev) => (prev === "signin" ? "signup" : "signin"))}
-            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+            className="text-[var(--color-accent-text)] hover:text-[var(--color-accent)] font-medium"
           >
             {mode === "signin" ? "新規登録" : "ログイン"}
           </button>
         </p>
       </div>
 
-      <p className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
-        続行することで <Link href="/terms" className="text-blue-600 hover:underline">利用規約</Link> と{" "}
-        <Link href="/privacy" className="text-blue-600 hover:underline">プライバシーポリシー</Link> に同意したものとみなします。
+      <p className="mt-6 text-center text-xs text-[var(--color-text-muted)]">
+        続行することで <Link href="/terms" className="text-[var(--color-accent-text)] hover:underline">利用規約</Link> と{" "}
+        <Link href="/privacy" className="text-[var(--color-accent-text)] hover:underline">プライバシーポリシー</Link> に同意したものとみなします。
       </p>
 
       <div className="mt-4 text-center">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
+          <ArrowLeft size={16} />
           ホームに戻る
         </Link>
       </div>
@@ -284,15 +283,15 @@ function SignInContent() {
 function LoadingFallback() {
   return (
     <div className="w-full max-w-lg">
-      <div className="bg-white dark:bg-dark-800 rounded-3xl shadow-xl p-8 animate-pulse">
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-40 mx-auto mb-8" />
+      <div className="bg-[var(--color-surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] p-8 animate-pulse">
+        <div className="h-8 bg-[var(--color-border)] rounded w-40 mx-auto mb-8" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-7">
-          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-xl" />
-          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+          <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
+          <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
         </div>
-        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-xl mb-4" />
-        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-xl mb-4" />
-        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+        <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)] mb-4" />
+        <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)] mb-4" />
+        <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
       </div>
     </div>
   );
@@ -300,12 +299,7 @@ function LoadingFallback() {
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-dark-950 dark:via-dark-900 dark:to-slate-900 px-4 py-10 sm:py-14">
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-80 sm:w-96 h-80 sm:h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-72 sm:w-80 h-72 sm:h-80 bg-gradient-to-br from-pink-400/20 to-orange-400/20 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] px-4 py-10 sm:py-14">
       <Suspense fallback={<LoadingFallback />}>
         <SignInContent />
       </Suspense>

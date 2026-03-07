@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { X, PaperPlaneRight, Stop, Trash } from "@phosphor-icons/react";
 import { useAIChat } from "@/hooks/useAIChat";
+import { Button } from "@/components/ui/Button";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { AIChatAction, LLMProvider } from "@/types/ai";
 
-const LLM_OPTIONS: Array<{ id: LLMProvider; label: string; cost: string }> = [
-  { id: "gemini", label: "Gemini", cost: "Free" },
-  { id: "claude", label: "Claude", cost: "2cr" },
-  { id: "grok", label: "Grok", cost: "1cr" },
+const LLM_OPTIONS: Array<{ value: LLMProvider; label: string }> = [
+  { value: "gemini", label: "Gemini (Free)" },
+  { value: "claude", label: "Claude (2cr)" },
+  { value: "grok", label: "Grok (1cr)" },
 ];
 
 interface AIChatPanelProps {
@@ -42,67 +45,58 @@ export function AIChatPanel({ isOpen, onClose, imageContext, onAction }: AIChatP
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-0 bottom-0 w-80 z-40
-      bg-dark-900/95 backdrop-blur-xl border-l border-white/10 shadow-2xl
+    <div className="fixed right-0 top-0 bottom-0 w-[360px] z-40
+      bg-[var(--color-surface)] backdrop-blur-xl border-l border-[var(--color-border)] shadow-[var(--shadow-lg)]
       flex flex-col">
 
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-white/10">
-        <h3 className="text-sm font-semibold text-white">AI Assistant</h3>
+      <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)]">
+        <h3 className="text-sm font-semibold text-[var(--color-text)]">AI Assistant</h3>
         <div className="flex gap-1">
-          <button onClick={clearChat} className="p-1 rounded hover:bg-white/10 text-white/40 text-xs">Clear</button>
-          <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-white/50">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <Button variant="ghost" size="sm" onClick={clearChat} icon={<Trash size={14} />}>Clear</Button>
+          <button onClick={onClose} className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--color-accent-soft)] text-[var(--color-text-muted)] transition-colors duration-[var(--transition-fast)]">
+            <X size={16} />
           </button>
         </div>
       </div>
 
       {/* LLM Selector */}
-      <div className="flex gap-1 p-2 border-b border-white/5">
-        {LLM_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            onClick={() => setLLMProvider(opt.id)}
-            className={`flex-1 px-2 py-1 text-xs rounded-lg transition-colors ${
-              llmProvider === opt.id
-                ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                : "bg-white/5 text-white/50 border border-transparent hover:bg-white/10"
-            }`}
-          >
-            {opt.label} <span className="text-[10px] opacity-60">{opt.cost}</span>
-          </button>
-        ))}
+      <div className="p-2 border-b border-[var(--color-border)]">
+        <SegmentedControl
+          options={LLM_OPTIONS}
+          value={llmProvider}
+          onChange={setLLMProvider}
+          className="w-full"
+        />
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.length === 0 && (
-          <p className="text-sm text-white/30 text-center mt-8">
+          <p className="text-sm text-[var(--color-text-muted)] text-center mt-8">
             画像について質問してみよう！
           </p>
         )}
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm ${
+            <div className={`max-w-[85%] px-3 py-2 rounded-[var(--radius-lg)] text-sm ${
               msg.role === "user"
-                ? "bg-purple-500/20 text-white/90"
-                : "bg-white/5 text-white/80"
+                ? "bg-[var(--color-accent-soft)] text-[var(--color-text)]"
+                : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)]"
             }`}>
               <p className="whitespace-pre-wrap">{msg.content}</p>
               {msg.actions && msg.actions.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-white/10">
+                <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-[var(--color-border)]">
                   {msg.actions.map((action, i) => (
                     <button
                       key={i}
                       onClick={() => onAction?.(action)}
-                      className="px-2 py-1 text-xs rounded-lg
-                        bg-purple-500/20 hover:bg-purple-500/30
-                        text-purple-300 transition-colors"
+                      className="px-2 py-1 text-xs rounded-[var(--radius-sm)]
+                        bg-[var(--color-accent-soft)] hover:bg-[var(--color-accent-hover)]
+                        text-[var(--color-accent)] transition-colors duration-[var(--transition-fast)]"
                     >
                       {action.label}
-                      {action.credits > 0 && <span className="ml-1 text-amber-400">{action.credits}cr</span>}
+                      {action.credits > 0 && <span className="ml-1 text-[var(--color-warning)]">{action.credits}cr</span>}
                     </button>
                   ))}
                 </div>
@@ -112,11 +106,11 @@ export function AIChatPanel({ isOpen, onClose, imageContext, onAction }: AIChatP
         ))}
         {streaming && (
           <div className="flex justify-start">
-            <div className="px-3 py-2 rounded-xl bg-white/5">
+            <div className="px-3 py-2 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border)]">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:0.1s]" />
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="w-2 h-2 bg-[var(--color-accent)] rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-[var(--color-accent)] rounded-full animate-bounce [animation-delay:0.1s]" />
+                <div className="w-2 h-2 bg-[var(--color-accent)] rounded-full animate-bounce [animation-delay:0.2s]" />
               </div>
             </div>
           </div>
@@ -125,7 +119,7 @@ export function AIChatPanel({ isOpen, onClose, imageContext, onAction }: AIChatP
       </div>
 
       {/* Input */}
-      <div className="p-3 border-t border-white/10">
+      <div className="p-3 border-t border-[var(--color-border)]">
         <div className="flex gap-2">
           <textarea
             value={input}
@@ -133,23 +127,24 @@ export function AIChatPanel({ isOpen, onClose, imageContext, onAction }: AIChatP
             onKeyDown={handleKeyDown}
             placeholder="メッセージを入力..."
             rows={1}
-            className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10
-              text-white text-sm placeholder-white/30 resize-none
-              focus:outline-none focus:border-purple-500/50"
+            className="flex-1 px-3 py-2 rounded-[var(--radius-lg)] bg-[var(--color-bg)] border border-[var(--color-border)]
+              text-[var(--color-text)] text-sm placeholder-[var(--color-text-muted)] resize-none
+              focus:outline-none focus:border-[var(--color-accent)] transition-colors duration-[var(--transition-fast)]"
           />
           {streaming ? (
-            <button onClick={stopStreaming} className="px-3 py-2 rounded-xl bg-red-500/20 text-red-400 text-sm hover:bg-red-500/30">
+            <Button variant="danger" size="md" onClick={stopStreaming} icon={<Stop size={16} />}>
               Stop
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
+              variant="primary"
+              size="md"
               onClick={handleSend}
               disabled={!input.trim()}
-              className="px-3 py-2 rounded-xl bg-purple-500/20 text-purple-300 text-sm
-                hover:bg-purple-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              icon={<PaperPlaneRight size={16} />}
             >
               Send
-            </button>
+            </Button>
           )}
         </div>
       </div>

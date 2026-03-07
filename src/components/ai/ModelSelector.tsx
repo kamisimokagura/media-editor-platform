@@ -16,21 +16,21 @@ export function ModelSelector({ models, selected, onSelect }: ModelSelectorProps
         <button
           key={model.id}
           onClick={() => onSelect(model.id)}
-          className={`p-3 rounded-xl text-left transition-all duration-200 border ${
+          className={`p-3 rounded-[var(--radius-lg)] text-left transition-all duration-[var(--transition-base)] border ${
             selected === model.id
-              ? "bg-purple-500/20 border-purple-500/50 ring-1 ring-purple-500/30"
-              : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+              ? "bg-[var(--color-accent-soft)] border-[var(--color-accent)] ring-1 ring-[var(--color-accent)]"
+              : "bg-[var(--color-bg)] border-[var(--color-border)] hover:bg-[var(--color-accent-soft)] hover:border-[var(--color-border-hover)]"
           }`}
         >
           <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium text-white/90">{model.name}</span>
-            <span className="text-xs text-amber-400">{model.credits}cr</span>
+            <span className="text-sm font-medium text-[var(--color-text)]">{model.name}</span>
+            <span className="text-xs text-[var(--color-warning)]">{model.credits}cr</span>
           </div>
-          <p className="text-xs text-white/50 line-clamp-2">{model.description}</p>
+          <p className="text-xs text-[var(--color-text-muted)] line-clamp-2">{model.description}</p>
           <div className="flex gap-1 mt-2">
             {model.tags.map((tag) => (
-              <span key={tag} className="px-1.5 py-0.5 text-[10px] rounded-full
-                bg-white/5 text-white/40">{tag}</span>
+              <span key={tag} className="px-1.5 py-0.5 text-[10px] rounded-[var(--radius-full)]
+                bg-[var(--color-accent-soft)] text-[var(--color-text-muted)]">{tag}</span>
             ))}
           </div>
         </button>

@@ -18,44 +18,42 @@ export function AIToolbar({ onFeatureSelect, disabled }: AIToolbarProps) {
 
   return (
     <div className="flex flex-col gap-4 p-3">
-      <h3 className="text-sm font-semibold text-gray-700 dark:text-white/80 uppercase tracking-wider">AI Tools</h3>
+      <h3 className="text-sm font-semibold text-[var(--color-text)] uppercase tracking-wider">AI Tools</h3>
 
       {/* Free Features */}
       <div className="space-y-1">
-        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mb-2">Free</p>
+        <p className="text-xs text-[var(--color-success)] font-medium mb-2">Free</p>
         {FREE_FEATURES.map(([id]) => (
           <button
             key={id}
             onClick={() => onFeatureSelect(id)}
             disabled={disabled || isProcessing}
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg
-              bg-gray-100 hover:bg-emerald-50 border border-gray-200 hover:border-emerald-300
-              dark:bg-white/5 dark:hover:bg-emerald-500/10 dark:border-white/5 dark:hover:border-emerald-500/30
-              text-sm text-gray-800 dark:text-white/90 transition-all duration-200
+              bg-[var(--color-bg)] hover:bg-[var(--color-success-soft)] border border-[var(--color-border)] hover:border-[var(--color-success)]
+              text-sm text-[var(--color-text)] transition-all duration-[var(--transition-base)]
               disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span className="capitalize">{id.replace(/-/g, " ")}</span>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">FREE</span>
+            <span className="text-xs text-[var(--color-success)] font-medium">FREE</span>
           </button>
         ))}
       </div>
 
       {/* Paid Features */}
       <div className="space-y-1">
-        <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mb-2">Pro</p>
+        <p className="text-xs text-[var(--color-warning)] font-medium mb-2">Pro</p>
         {PAID_FEATURES.map(([id, config]) => (
           <button
             key={id}
             onClick={() => onFeatureSelect(id)}
             disabled={disabled || isProcessing}
             className="w-full flex items-center justify-between px-3 py-2 rounded-lg
-              bg-gray-100 hover:bg-amber-50 border border-gray-200 hover:border-amber-300
-              dark:bg-white/5 dark:hover:bg-amber-500/10 dark:border-white/5 dark:hover:border-amber-500/30
-              text-sm text-gray-800 dark:text-white/90 transition-all duration-200
+              bg-[var(--color-bg)] hover:bg-[var(--color-warning-soft)] border border-[var(--color-border)] hover:border-[var(--color-warning)]
+              text-sm text-[var(--color-text)] transition-all duration-[var(--transition-base)]
               disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span className="capitalize">{id.replace(/-/g, " ")}</span>
-            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">{config.credits}cr</span>
+            <span className="text-xs text-[var(--color-warning)] font-medium">{config.credits}cr</span>
           </button>
         ))}
       </div>
