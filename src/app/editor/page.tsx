@@ -100,8 +100,12 @@ function FfmpegStatusCard({
 }
 
 export default function EditorPage() {
-  const { project, createProject, mediaFiles, addMediaFile, processingState, selectMedia } =
-    useEditorStore();
+  const project = useEditorStore((state) => state.project);
+  const mediaFiles = useEditorStore((state) => state.mediaFiles);
+  const addMediaFile = useEditorStore((state) => state.addMediaFile);
+  const createProject = useEditorStore((state) => state.createProject);
+  const processingState = useEditorStore((state) => state.processingState);
+  const selectMedia = useEditorStore((state) => state.selectMedia);
   const { loadFFmpeg, generateThumbnail, ffmpegLoaded } = useFFmpeg();
 
   const [ffmpegError, setFfmpegError] = useState<string | null>(null);
@@ -145,8 +149,31 @@ export default function EditorPage() {
       return;
     }
 
-    setHasAttemptedAutoLoad(true);
-    void runFfmpegLoad();
+    let cancelled = false;
+    let timeoutId: number | null = null;
+    let idleId: number | null = null;
+
+    const startAutoLoad = () => {
+      if (cancelled) return;
+      setHasAttemptedAutoLoad(true);
+      void runFfmpegLoad();
+    };
+
+    if (typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(startAutoLoad, { timeout: 1500 });
+    } else {
+      timeoutId = window.setTimeout(startAutoLoad, 800);
+    }
+
+    return () => {
+      cancelled = true;
+      if (idleId !== null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, [ffmpegLoaded, isLoadingFFmpeg, hasAttemptedAutoLoad, runFfmpegLoad]);
 
   const handleFilesSelected = useCallback(

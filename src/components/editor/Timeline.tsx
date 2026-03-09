@@ -13,6 +13,8 @@ import type { Track, Clip } from "@/types";
 
 export function Timeline() {
   const timelineRef = useRef<HTMLDivElement>(null);
+  const dragFrameRef = useRef<number | null>(null);
+  const pendingDragTimeRef = useRef<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragInfo, setDragInfo] = useState<{
     clipId: string;
@@ -22,20 +24,18 @@ export function Timeline() {
     pointerId: number;
   } | null>(null);
 
-  const {
-    project,
-    currentTime,
-    zoom,
-    setCurrentTime,
-    selectedClipId,
-    selectClip,
-    selectedTrackId,
-    selectTrack,
-    updateClip,
-    removeClip,
-    removeTrack,
-    setZoom,
-  } = useEditorStore();
+  const project = useEditorStore((state) => state.project);
+  const currentTime = useEditorStore((state) => state.currentTime);
+  const zoom = useEditorStore((state) => state.zoom);
+  const setCurrentTime = useEditorStore((state) => state.setCurrentTime);
+  const selectedClipId = useEditorStore((state) => state.selectedClipId);
+  const selectClip = useEditorStore((state) => state.selectClip);
+  const selectedTrackId = useEditorStore((state) => state.selectedTrackId);
+  const selectTrack = useEditorStore((state) => state.selectTrack);
+  const updateClip = useEditorStore((state) => state.updateClip);
+  const removeClip = useEditorStore((state) => state.removeClip);
+  const removeTrack = useEditorStore((state) => state.removeTrack);
+  const setZoom = useEditorStore((state) => state.setZoom);
 
   const pixelsPerSecond = 50 * zoom;
 
@@ -76,17 +76,30 @@ export function Timeline() {
   useEffect(() => {
     if (!isDragging || !dragInfo) return;
 
+    const flushDragUpdate = () => {
+      dragFrameRef.current = null;
+      if (pendingDragTimeRef.current === null) return;
+      updateClip(dragInfo.trackId, dragInfo.clipId, { startTime: pendingDragTimeRef.current });
+      pendingDragTimeRef.current = null;
+    };
+
     const handlePointerMove = (e: PointerEvent) => {
       if (e.pointerId !== dragInfo.pointerId) return;
       const deltaX = e.clientX - dragInfo.startX;
       const deltaTime = deltaX / pixelsPerSecond;
       const newStartTime = Math.max(0, dragInfo.originalStartTime + deltaTime);
 
-      updateClip(dragInfo.trackId, dragInfo.clipId, { startTime: newStartTime });
+      pendingDragTimeRef.current = newStartTime;
+      if (dragFrameRef.current !== null) return;
+      dragFrameRef.current = window.requestAnimationFrame(flushDragUpdate);
     };
 
     const handlePointerEnd = (e: PointerEvent) => {
       if (e.pointerId !== dragInfo.pointerId) return;
+      if (dragFrameRef.current !== null) {
+        window.cancelAnimationFrame(dragFrameRef.current);
+        flushDragUpdate();
+      }
       setIsDragging(false);
       setDragInfo(null);
     };
@@ -96,6 +109,10 @@ export function Timeline() {
     window.addEventListener("pointercancel", handlePointerEnd);
 
     return () => {
+      if (dragFrameRef.current !== null) {
+        window.cancelAnimationFrame(dragFrameRef.current);
+        dragFrameRef.current = null;
+      }
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerEnd);
       window.removeEventListener("pointercancel", handlePointerEnd);

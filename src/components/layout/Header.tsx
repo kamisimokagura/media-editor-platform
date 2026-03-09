@@ -31,7 +31,8 @@ const navItems = AI_ENABLED
 
 export function Header() {
   const { user, loading, signOut } = useAuth();
-  const { darkMode, toggleDarkMode } = useEditorStore();
+  const darkMode = useEditorStore((state) => state.darkMode);
+  const toggleDarkMode = useEditorStore((state) => state.toggleDarkMode);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);

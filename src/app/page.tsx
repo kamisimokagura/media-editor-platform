@@ -6,7 +6,7 @@ import { Button, Card, DropZone } from "@/components/ui";
 import { useEditorStore } from "@/stores/editorStore";
 import { AI_ENABLED } from "@/lib/featureFlags";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { MediaFile, MediaType } from "@/types";
 import {
@@ -34,36 +34,97 @@ import {
 
 export default function HomePage() {
   const router = useRouter();
-  const { createProject, addMediaFile, setCurrentImage } = useEditorStore();
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const createProject = useEditorStore((state) => state.createProject);
+  const addMediaFile = useEditorStore((state) => state.addMediaFile);
+  const setCurrentImage = useEditorStore((state) => state.setCurrentImage);
+  const scrollProgressRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
+  const orbOneRef = useRef<HTMLDivElement>(null);
+  const orbTwoRef = useRef<HTMLDivElement>(null);
+  const orbThreeRef = useRef<HTMLDivElement>(null);
+  const scrollFrameRef = useRef<number | null>(null);
+  const parallaxFrameRef = useRef<number | null>(null);
+  const pendingMousePositionRef = useRef({ x: 0, y: 0 });
 
   // Scroll progress indicator
   useEffect(() => {
-    const handleScroll = () => {
+    const updateScrollProgress = () => {
+      scrollFrameRef.current = null;
+      if (!scrollProgressRef.current) return;
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = (window.scrollY / totalHeight) * 100;
-      setScrollProgress(progress);
+      const progress = totalHeight > 0 ? window.scrollY / totalHeight : 0;
+      const clampedProgress = Math.max(0, Math.min(progress, 1));
+      scrollProgressRef.current.style.transform = `scaleX(${clampedProgress})`;
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const handleScroll = () => {
+      if (scrollFrameRef.current !== null) return;
+      scrollFrameRef.current = window.requestAnimationFrame(updateScrollProgress);
+    };
+
+    updateScrollProgress();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+    };
   }, []);
 
   // Mouse parallax effect
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (heroRef.current) {
-        const rect = heroRef.current.getBoundingClientRect();
-        const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-        const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
-        setMousePosition({ x, y });
+    const hero = heroRef.current;
+    if (!hero) return;
+
+    const applyParallax = () => {
+      parallaxFrameRef.current = null;
+      const { x, y } = pendingMousePositionRef.current;
+      if (orbOneRef.current) {
+        orbOneRef.current.style.transform = `translate(${x * 30}px, ${y * 30}px)`;
+      }
+      if (orbTwoRef.current) {
+        orbTwoRef.current.style.transform = `translate(${x * -20}px, ${y * -20}px)`;
+      }
+      if (orbThreeRef.current) {
+        orbThreeRef.current.style.transform = `translate(${x * 15}px, ${y * 15}px)`;
       }
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    const scheduleParallax = () => {
+      if (parallaxFrameRef.current !== null) return;
+      parallaxFrameRef.current = window.requestAnimationFrame(applyParallax);
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const rect = hero.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      pendingMousePositionRef.current = {
+        x: (e.clientX - rect.left - rect.width / 2) / rect.width,
+        y: (e.clientY - rect.top - rect.height / 2) / rect.height,
+      };
+      scheduleParallax();
+    };
+
+    const handlePointerLeave = () => {
+      pendingMousePositionRef.current = { x: 0, y: 0 };
+      scheduleParallax();
+    };
+
+    applyParallax();
+    hero.addEventListener("pointermove", handlePointerMove, { passive: true });
+    hero.addEventListener("pointerleave", handlePointerLeave);
+
+    return () => {
+      hero.removeEventListener("pointermove", handlePointerMove);
+      hero.removeEventListener("pointerleave", handlePointerLeave);
+      if (parallaxFrameRef.current !== null) {
+        window.cancelAnimationFrame(parallaxFrameRef.current);
+      }
+    };
   }, []);
 
   const handleFilesSelected = useCallback(
@@ -249,8 +310,9 @@ export default function HomePage() {
     <div className="min-h-screen w-full bg-[var(--color-bg)] overflow-x-hidden">
       {/* Scroll Progress */}
       <div
+        ref={scrollProgressRef}
         className="scroll-progress"
-        style={{ transform: `scaleX(${scrollProgress / 100})` }}
+        style={{ transform: "scaleX(0)" }}
       />
 
       <Header />
@@ -268,22 +330,19 @@ export default function HomePage() {
 
             {/* Floating Orbs with Parallax */}
             <div
+              ref={orbOneRef}
               className="orb w-[500px] h-[500px] bg-[var(--color-accent)]/20 top-1/4 left-1/4 -translate-x-1/2"
-              style={{
-                transform: `translate(${mousePosition.x * 30}px, ${mousePosition.y * 30}px)`,
-              }}
+              style={{ transform: "translate(0px, 0px)" }}
             />
             <div
+              ref={orbTwoRef}
               className="orb w-[400px] h-[400px] bg-[var(--color-accent)]/15 bottom-1/4 right-1/4 translate-x-1/2"
-              style={{
-                transform: `translate(${mousePosition.x * -20}px, ${mousePosition.y * -20}px)`,
-              }}
+              style={{ transform: "translate(0px, 0px)" }}
             />
             <div
+              ref={orbThreeRef}
               className="orb w-[300px] h-[300px] bg-[var(--color-accent)]/10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              style={{
-                transform: `translate(${mousePosition.x * 15}px, ${mousePosition.y * 15}px)`,
-              }}
+              style={{ transform: "translate(0px, 0px)" }}
             />
 
             {/* Gradient Glow - Centered */}

@@ -15,18 +15,18 @@ import {
 
 export function VideoPreview() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const timeUpdateFrameRef = useRef<number | null>(null);
+  const pendingTimeRef = useRef<number | null>(null);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
 
-  const {
-    mediaFiles,
-    selectedMediaId,
-    currentTime,
-    isPlaying,
-    setCurrentTime,
-    setIsPlaying,
-    project,
-  } = useEditorStore();
+  const mediaFiles = useEditorStore((state) => state.mediaFiles);
+  const selectedMediaId = useEditorStore((state) => state.selectedMediaId);
+  const currentTime = useEditorStore((state) => state.currentTime);
+  const isPlaying = useEditorStore((state) => state.isPlaying);
+  const setCurrentTime = useEditorStore((state) => state.setCurrentTime);
+  const setIsPlaying = useEditorStore((state) => state.setIsPlaying);
+  const project = useEditorStore((state) => state.project);
 
   const selectedMedia = mediaFiles.find((f) => f.id === selectedMediaId);
 
@@ -43,11 +43,20 @@ export function VideoPreview() {
   }, [isPlaying]);
 
   // Update current time from video
+  const flushTimeUpdate = useCallback(() => {
+    timeUpdateFrameRef.current = null;
+    if (pendingTimeRef.current === null) return;
+    setCurrentTime(pendingTimeRef.current);
+    pendingTimeRef.current = null;
+  }, [setCurrentTime]);
+
   const handleTimeUpdate = useCallback(() => {
     if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
+      pendingTimeRef.current = videoRef.current.currentTime;
+      if (timeUpdateFrameRef.current !== null) return;
+      timeUpdateFrameRef.current = window.requestAnimationFrame(flushTimeUpdate);
     }
-  }, [setCurrentTime]);
+  }, [flushTimeUpdate]);
 
   // Seek video
   useEffect(() => {
@@ -55,6 +64,14 @@ export function VideoPreview() {
       videoRef.current.currentTime = currentTime;
     }
   }, [currentTime]);
+
+  useEffect(() => {
+    return () => {
+      if (timeUpdateFrameRef.current !== null) {
+        window.cancelAnimationFrame(timeUpdateFrameRef.current);
+      }
+    };
+  }, []);
 
   // Handle play/pause toggle
   const togglePlayback = () => {

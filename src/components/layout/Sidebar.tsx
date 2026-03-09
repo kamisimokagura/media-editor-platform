@@ -15,18 +15,16 @@ import {
 } from "@phosphor-icons/react";
 
 export function Sidebar() {
-  const {
-    sidebarOpen,
-    toggleSidebar,
-    mediaFiles,
-    selectedMediaId,
-    selectMedia,
-    removeMediaFile,
-    clearAllMedia,
-    addTrack,
-    addClipToTrack,
-    project,
-  } = useEditorStore();
+  const sidebarOpen = useEditorStore((state) => state.sidebarOpen);
+  const toggleSidebar = useEditorStore((state) => state.toggleSidebar);
+  const mediaFiles = useEditorStore((state) => state.mediaFiles);
+  const selectedMediaId = useEditorStore((state) => state.selectedMediaId);
+  const selectMedia = useEditorStore((state) => state.selectMedia);
+  const removeMediaFile = useEditorStore((state) => state.removeMediaFile);
+  const clearAllMedia = useEditorStore((state) => state.clearAllMedia);
+  const addTrack = useEditorStore((state) => state.addTrack);
+  const addClipToTrack = useEditorStore((state) => state.addClipToTrack);
+  const project = useEditorStore((state) => state.project);
 
   const handleAddToTimeline = (mediaId: string) => {
     if (!project || project.timeline.tracks.length === 0) {

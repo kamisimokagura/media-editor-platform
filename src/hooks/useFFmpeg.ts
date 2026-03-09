@@ -113,7 +113,9 @@ export function useFFmpeg() {
     speed: 0,
   });
 
-  const { ffmpegLoaded, setFfmpegLoaded, setProcessingState } = useEditorStore();
+  const ffmpegLoaded = useEditorStore((state) => state.ffmpegLoaded);
+  const setFfmpegLoaded = useEditorStore((state) => state.setFfmpegLoaded);
+  const setProcessingState = useEditorStore((state) => state.setProcessingState);
 
   const attachListeners = useCallback(
     (instance: FFmpeg) => {

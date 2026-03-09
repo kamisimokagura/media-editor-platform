@@ -71,6 +71,7 @@ export function ImageEditor({
   const imageRef = useRef<HTMLImageElement>(null);
   const cropOverlayRef = useRef<HTMLDivElement>(null);
   const autoExportOpenedRef = useRef(false);
+  const adjustmentFrameRef = useRef<number | null>(null);
 
   const [imageLoaded, setImageLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<EditorTab>(initialTab);
@@ -89,22 +90,20 @@ export function ImageEditor({
   const [resizeHeight, setResizeHeight] = useState(0);
   const [resizeMaintainAspect, setResizeMaintainAspect] = useState(true);
 
-  const {
-    currentImage,
-    setCurrentImage,
-    imageAdjustments,
-    setImageAdjustments,
-    resetImageAdjustments,
-    fullResetImage,
-    undoImageAdjustment,
-    processingState,
-    addMediaFile,
-    removeMediaFile,
-    clearAllMedia,
-    mediaFiles,
-    originalImageData,
-    historyIndex,
-  } = useEditorStore();
+  const currentImage = useEditorStore((state) => state.currentImage);
+  const setCurrentImage = useEditorStore((state) => state.setCurrentImage);
+  const imageAdjustments = useEditorStore((state) => state.imageAdjustments);
+  const setImageAdjustments = useEditorStore((state) => state.setImageAdjustments);
+  const resetImageAdjustments = useEditorStore((state) => state.resetImageAdjustments);
+  const fullResetImage = useEditorStore((state) => state.fullResetImage);
+  const undoImageAdjustment = useEditorStore((state) => state.undoImageAdjustment);
+  const processingState = useEditorStore((state) => state.processingState);
+  const addMediaFile = useEditorStore((state) => state.addMediaFile);
+  const removeMediaFile = useEditorStore((state) => state.removeMediaFile);
+  const clearAllMedia = useEditorStore((state) => state.clearAllMedia);
+  const mediaFiles = useEditorStore((state) => state.mediaFiles);
+  const originalImageData = useEditorStore((state) => state.originalImageData);
+  const historyIndex = useEditorStore((state) => state.historyIndex);
 
   const { initCanvas, applyAdjustments, exportImage, resizeImage, cropImage } = useImageProcessor();
   const imageFiles = mediaFiles.filter((file) => file.type === "image");
@@ -252,8 +251,32 @@ export function ImageEditor({
   }, [currentImage, imageLoaded, initCanvas]);
 
   useEffect(() => {
-    if (imageLoaded) applyAdjustments(imageAdjustments);
+    if (!imageLoaded) return;
+
+    if (adjustmentFrameRef.current !== null) {
+      window.cancelAnimationFrame(adjustmentFrameRef.current);
+    }
+
+    adjustmentFrameRef.current = window.requestAnimationFrame(() => {
+      adjustmentFrameRef.current = null;
+      applyAdjustments(imageAdjustments);
+    });
+
+    return () => {
+      if (adjustmentFrameRef.current !== null) {
+        window.cancelAnimationFrame(adjustmentFrameRef.current);
+        adjustmentFrameRef.current = null;
+      }
+    };
   }, [imageAdjustments, imageLoaded, applyAdjustments]);
+
+  useEffect(() => {
+    return () => {
+      if (adjustmentFrameRef.current !== null) {
+        window.cancelAnimationFrame(adjustmentFrameRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (originalImageData) {
