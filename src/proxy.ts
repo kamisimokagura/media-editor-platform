@@ -121,7 +121,6 @@ export async function proxy(request: NextRequest) {
 
   // COOP/COEP headers for SharedArrayBuffer (FFmpeg WASM)
   if (
-    request.nextUrl.pathname.startsWith('/editor') ||
     request.nextUrl.pathname.startsWith('/image') ||
     request.nextUrl.pathname.startsWith('/convert')
   ) {

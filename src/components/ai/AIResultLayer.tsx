@@ -4,6 +4,26 @@ import React from "react";
 import { X } from "@phosphor-icons/react";
 import { useAILayers } from "@/hooks/useAILayers";
 
+/** Layer label → 日本語表示名 */
+const LAYER_LABELS: Record<string, string> = {
+  "auto-enhance": "自動補正",
+  "upscale-lite": "軽量アップスケール",
+  "upscale-hd":   "HD アップスケール",
+  "denoise":      "ノイズ除去",
+  "face-detect":  "顔検出",
+  "smart-crop":   "スマートクロップ",
+  "bg-remove":    "背景除去",
+  "inpaint":      "塗りつぶし",
+  "erase":        "消しゴム",
+  "expand":       "画像拡張",
+  "style":        "スタイル変換",
+  "generate":     "画像生成",
+};
+
+function getLayerLabel(label: string): string {
+  return LAYER_LABELS[label] ?? label.replace(/-/g, " ");
+}
+
 interface AIResultLayerProps {
   onApply?: (layerId: string) => void;
   onDiscard?: (layerId: string) => void;
@@ -17,7 +37,7 @@ export function AIResultLayer({ onApply, onDiscard }: AIResultLayerProps) {
   return (
     <div className="absolute bottom-14 left-3 right-3 max-h-48 overflow-y-auto
       bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-lg)] p-2 space-y-1">
-      <p className="text-xs text-[var(--color-text-muted)] px-2 py-1 uppercase tracking-wider">AI Layers</p>
+      <p className="text-xs text-[var(--color-text-muted)] px-2 py-1 tracking-wider">AI レイヤー</p>
       {layers.map((layer) => (
         <div
           key={layer.id}
@@ -30,11 +50,11 @@ export function AIResultLayer({ onApply, onDiscard }: AIResultLayerProps) {
               layer.visible ? "bg-[var(--color-accent)] border-[var(--color-accent)]" : "bg-transparent border-[var(--color-border)]"
             }`}
           />
-          <span className="flex-1 text-sm text-[var(--color-text)] capitalize truncate">
-            {layer.label.replace(/-/g, " ")}
+          <span className="flex-1 text-sm text-[var(--color-text)] truncate">
+            {getLayerLabel(layer.label)}
           </span>
           {layer.credits ? (
-            <span className="text-xs text-[var(--color-warning)]">{layer.credits}cr</span>
+            <span className="text-xs text-[var(--color-warning)]">{layer.credits} cr</span>
           ) : null}
           <div className="flex gap-1">
             {onApply && (
@@ -43,7 +63,7 @@ export function AIResultLayer({ onApply, onDiscard }: AIResultLayerProps) {
                 className="px-2 py-0.5 text-xs rounded-[var(--radius-sm)] bg-[var(--color-success-soft)] text-[var(--color-success)]
                   hover:bg-[var(--color-success)] hover:text-[var(--color-text-inverse)] transition-colors duration-[var(--transition-fast)]"
               >
-                Apply
+                適用
               </button>
             )}
             {onDiscard && (

@@ -9,11 +9,10 @@ import { ModelSelector } from "./ModelSelector";
 import type { AIModelOption } from "@/types/ai";
 
 const IMAGE_MODELS: AIModelOption[] = [
-  { id: "gemini-flash", name: "Gemini Flash", provider: "Google", credits: 1, tags: ["fast", "free-tier"], description: "Google's fast image generation" },
-  { id: "gpt-image", name: "GPT Image", provider: "OpenAI", credits: 5, tags: ["hd", "accurate"], description: "OpenAI's high-quality image gen" },
-  { id: "grok-aurora", name: "Grok Aurora", provider: "xAI", credits: 3, tags: ["creative", "fast"], description: "xAI's creative image generation" },
-  { id: "flux-pro", name: "FLUX Pro", provider: "fal.ai", credits: 4, tags: ["photorealism", "hd"], description: "Ultra-realistic photo generation" },
-  { id: "recraft-v3", name: "Recraft V3", provider: "fal.ai", credits: 3, tags: ["design", "vector"], description: "Design-focused image generation" },
+  { id: "grok-aurora", name: "Grok Aurora", provider: "xAI", credits: 3, tags: ["クリエイティブ", "高速"], description: "xAIのクリエイティブな画像生成" },
+  { id: "gemini-flash", name: "Gemini Flash", provider: "Google", credits: 2, tags: ["高速", "高品質"], description: "Googleの高速画像生成" },
+  { id: "flux-pro", name: "FLUX Pro", provider: "fal.ai", credits: 4, tags: ["フォトリアル", "高解像度"], description: "超リアルな写真風画像生成" },
+  { id: "recraft-v3", name: "Recraft V3", provider: "fal.ai", credits: 3, tags: ["デザイン", "ベクター"], description: "デザイン特化の画像生成" },
 ];
 
 interface AIGenerateModalProps {
@@ -25,7 +24,7 @@ interface AIGenerateModalProps {
 export function AIGenerateModal({ isOpen, onClose, onImageGenerated }: AIGenerateModalProps) {
   const { setAIStatus } = useAIStore();
   const [prompt, setPrompt] = useState("");
-  const [selectedModel, setSelectedModel] = useState("gemini-flash");
+  const [selectedModel, setSelectedModel] = useState("grok-aurora");
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<{ image?: string; image_url?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -67,24 +66,24 @@ export function AIGenerateModal({ isOpen, onClose, onImageGenerated }: AIGenerat
     : result?.image_url ?? null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="AI Image Generation" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="AI 画像生成" size="lg">
       <div className="space-y-4">
-        {/* Prompt */}
+        {/* プロンプト */}
         <div>
-          <label className="block text-sm text-[var(--color-text-muted)] mb-1">Prompt</label>
+          <label className="block text-sm text-[var(--color-text-muted)] mb-1">プロンプト</label>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe the image you want to generate..."
+            placeholder="生成したい画像の説明を入力してください..."
             className="w-full h-24 px-3 py-2 rounded-[var(--radius-lg)] bg-[var(--color-bg)] border border-[var(--color-border)]
               text-[var(--color-text)] placeholder-[var(--color-text-muted)] text-sm resize-none
               focus:outline-none focus:border-[var(--color-accent)]"
           />
         </div>
 
-        {/* Model Selection */}
+        {/* モデル選択 */}
         <div>
-          <label className="block text-sm text-[var(--color-text-muted)] mb-2">Model</label>
+          <label className="block text-sm text-[var(--color-text-muted)] mb-2">モデル</label>
           <ModelSelector
             models={IMAGE_MODELS}
             selected={selectedModel}
@@ -92,7 +91,7 @@ export function AIGenerateModal({ isOpen, onClose, onImageGenerated }: AIGenerat
           />
         </div>
 
-        {/* Generate Button */}
+        {/* 生成ボタン */}
         <Button
           variant="primary"
           size="lg"
@@ -102,23 +101,23 @@ export function AIGenerateModal({ isOpen, onClose, onImageGenerated }: AIGenerat
           icon={!generating ? <ImageIcon size={18} /> : undefined}
           className="w-full"
         >
-          {generating ? "生成中..." : `Generate (${IMAGE_MODELS.find((m) => m.id === selectedModel)?.credits ?? 0}cr)`}
+          {generating ? "生成中..." : `画像を生成（${IMAGE_MODELS.find((m) => m.id === selectedModel)?.credits ?? 0} クレジット）`}
         </Button>
 
-        {/* Error */}
+        {/* エラー */}
         {error && (
           <div className="p-3 rounded-[var(--radius-lg)] bg-[var(--color-error-soft)] border border-[var(--color-error)] text-[var(--color-error)] text-sm">
             {error}
           </div>
         )}
 
-        {/* Result */}
+        {/* 結果 */}
         {resultSrc && (
           <div className="space-y-2">
-            <p className="text-sm text-[var(--color-text-muted)]">Result:</p>
+            <p className="text-sm text-[var(--color-text-muted)]">生成結果:</p>
             <img
               src={resultSrc}
-              alt="Generated image"
+              alt="生成された画像"
               className="w-full rounded-[var(--radius-lg)] border border-[var(--color-border)]"
             />
           </div>

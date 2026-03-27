@@ -1,10 +1,15 @@
 import { useCallback } from "react";
 import { useAIStore } from "@/stores/aiStore";
 
+const DEV_BYPASS = process.env.NEXT_PUBLIC_DEV_BYPASS_BILLING === "true" && process.env.NODE_ENV === "development";
+
 export function useCredits() {
   const { creditsRemaining, setCreditsRemaining } = useAIStore();
 
+  const effectiveCredits = DEV_BYPASS ? 99999 : creditsRemaining;
+
   const checkCredits = useCallback(async (needed: number): Promise<boolean> => {
+    if (DEV_BYPASS) return true;
     if (needed <= 0) return true;
     if (creditsRemaining < needed) return false;
     const res = await fetch("/api/ai/credits", {
@@ -19,6 +24,7 @@ export function useCredits() {
   }, [creditsRemaining, setCreditsRemaining]);
 
   const consumeCredits = useCallback(async (amount: number, operation: string): Promise<boolean> => {
+    if (DEV_BYPASS) return true;
     if (amount <= 0) return true;
     const res = await fetch("/api/ai/credits", {
       method: "POST",
@@ -39,5 +45,5 @@ export function useCredits() {
     }
   }, [setCreditsRemaining]);
 
-  return { creditsRemaining, checkCredits, consumeCredits, refreshCredits };
+  return { creditsRemaining: effectiveCredits, checkCredits, consumeCredits, refreshCredits };
 }

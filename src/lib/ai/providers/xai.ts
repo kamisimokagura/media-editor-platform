@@ -1,4 +1,4 @@
-export async function generateXAIImage(prompt: string, model: string = "grok-2-image"): Promise<string> {
+export async function generateXAIImage(prompt: string, model: string = "grok-imagine-image"): Promise<string> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) throw new Error("XAI_API_KEY not configured");
 
@@ -37,7 +37,7 @@ export async function generateGrokVideo(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "grok-2-video",
+      model: "grok-imagine-video",
       prompt,
       ...(options.image_url && { image_url: options.image_url }),
     }),

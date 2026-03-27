@@ -25,7 +25,7 @@ export function useAIFeature() {
       if (!isFreeFeature(featureId)) {
         const hasCredits = await checkCredits(config.credits);
         if (!hasCredits) {
-          toast.error(`クレジットが不足しています (必要: ${config.credits}cr)`);
+          toast.error(`クレジットが不足しています（必要: ${config.credits} クレジット）`);
           return null;
         }
       }

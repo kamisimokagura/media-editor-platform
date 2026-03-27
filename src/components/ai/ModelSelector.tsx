@@ -24,7 +24,7 @@ export function ModelSelector({ models, selected, onSelect }: ModelSelectorProps
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-sm font-medium text-[var(--color-text)]">{model.name}</span>
-            <span className="text-xs text-[var(--color-warning)]">{model.credits}cr</span>
+            <span className="text-xs text-[var(--color-warning)]">{model.credits} クレジット</span>
           </div>
           <p className="text-xs text-[var(--color-text-muted)] line-clamp-2">{model.description}</p>
           <div className="flex gap-1 mt-2">

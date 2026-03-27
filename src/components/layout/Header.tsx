@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEditorStore } from "@/stores/editorStore";
 import { AI_ENABLED } from "@/lib/featureFlags";
+import { CreditBadge } from "@/components/ai";
 import {
   Sparkle,
   Sun,
@@ -20,9 +21,8 @@ import {
 } from "@phosphor-icons/react";
 
 const baseNavItems = [
-  { href: "/editor", label: "動画編集" },
   { href: "/image", label: "画像編集" },
-  { href: "/convert", label: "変換" },
+  { href: "/convert", label: "形式変換" },
 ];
 
 const navItems = AI_ENABLED
@@ -41,7 +41,10 @@ export function Header() {
   // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(e.target as Node)
+      ) {
         setIsUserMenuOpen(false);
       }
     };
@@ -90,6 +93,7 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {AI_ENABLED && <CreditBadge />}
             <button
               onClick={toggleDarkMode}
               className="p-2.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-[var(--radius-md)] hover:bg-[var(--color-accent-soft)] transition-colors"
@@ -113,7 +117,7 @@ export function Header() {
                   {user.user_metadata?.avatar_url ? (
                     <img
                       src={user.user_metadata.avatar_url}
-                      alt={user.user_metadata?.full_name || "User"}
+                      alt={user.user_metadata?.full_name || "ユーザー"}
                       className="w-7 h-7 rounded-[var(--radius-sm)]"
                     />
                   ) : (
@@ -124,7 +128,7 @@ export function Header() {
                   <span className="hidden sm:block text-sm font-medium text-[var(--color-text)] max-w-[120px] truncate">
                     {user.user_metadata?.full_name?.split(" ")[0] ||
                       user.email?.split("@")[0] ||
-                      "User"}
+                      "ユーザー"}
                   </span>
                   <CaretDown
                     className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`}
@@ -140,7 +144,7 @@ export function Header() {
                         {user.user_metadata?.avatar_url ? (
                           <img
                             src={user.user_metadata.avatar_url}
-                            alt={user.user_metadata?.full_name || "User"}
+                            alt={user.user_metadata?.full_name || "ユーザー"}
                             className="w-10 h-10 rounded-[var(--radius-md)]"
                           />
                         ) : (
@@ -150,7 +154,7 @@ export function Header() {
                         )}
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-[var(--color-text)] truncate">
-                            {user.user_metadata?.full_name || "User"}
+                            {user.user_metadata?.full_name || "ユーザー"}
                           </p>
                           <p className="text-xs text-[var(--color-text-muted)] truncate">
                             {user.email}
@@ -244,7 +248,11 @@ export function Header() {
                     <div className="px-4 py-2 mb-1">
                       <div className="flex items-center gap-3">
                         {user.user_metadata?.avatar_url ? (
-                          <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-[var(--radius-sm)]" />
+                          <img
+                            src={user.user_metadata.avatar_url}
+                            alt=""
+                            className="w-8 h-8 rounded-[var(--radius-sm)]"
+                          />
                         ) : (
                           <div className="w-8 h-8 rounded-[var(--radius-sm)] bg-[var(--color-accent)] flex items-center justify-center text-white text-xs font-medium">
                             {user.email?.[0]?.toUpperCase() || "U"}
@@ -252,9 +260,13 @@ export function Header() {
                         )}
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-[var(--color-text)] truncate">
-                            {user.user_metadata?.full_name || user.email?.split("@")[0] || "User"}
+                            {user.user_metadata?.full_name ||
+                              user.email?.split("@")[0] ||
+                              "ユーザー"}
                           </p>
-                          <p className="text-xs text-[var(--color-text-muted)] truncate">{user.email}</p>
+                          <p className="text-xs text-[var(--color-text-muted)] truncate">
+                            {user.email}
+                          </p>
                         </div>
                       </div>
                     </div>

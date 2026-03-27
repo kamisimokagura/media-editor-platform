@@ -5,6 +5,19 @@ import { getOperationCost, isValidOperation } from "@/lib/ai/costs";
 import type { Json } from "@/types/database";
 
 export async function POST(request: NextRequest) {
+  // Dev bypass: return unlimited credits
+  if (process.env.NODE_ENV === "development" && process.env.DEV_BYPASS_BILLING === "true") {
+    let body: { action: string; operation: string; model?: string };
+    try { body = await request.json(); } catch { return NextResponse.json({ error: "不正なリクエスト" }, { status: 400 }); }
+    if (body.action === "check") {
+      return NextResponse.json({ allowed: true, credits_remaining: 99999, credits_needed: 0 });
+    }
+    if (body.action === "consume") {
+      return NextResponse.json({ success: true, credits_remaining: 99999 });
+    }
+    return NextResponse.json({ error: "不正なaction" }, { status: 400 });
+  }
+
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.json({ error: "Supabase未設定" }, { status: 503 });
   }

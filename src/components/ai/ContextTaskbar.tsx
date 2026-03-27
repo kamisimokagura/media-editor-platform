@@ -25,25 +25,25 @@ function getContextActions(props: ContextTaskbarProps): QuickAction[] {
 
   if (hasBrushSelection) {
     return [
-      { id: "inpaint", label: "Fill", icon: <PaintBucket size={16} />, credits: 5 },
-      { id: "erase", label: "Erase", icon: <Eraser size={16} />, credits: 3 },
-      { id: "style", label: "Style", icon: <Palette size={16} />, credits: 3 },
+      { id: "inpaint", label: "塗りつぶし", icon: <PaintBucket size={14} />, credits: 5 },
+      { id: "erase", label: "消しゴム", icon: <Eraser size={14} />, credits: 3 },
+      { id: "style", label: "スタイル", icon: <Palette size={14} />, credits: 3 },
     ];
   }
 
   if (hasFaceDetected) {
     return [
-      { id: "auto-enhance", label: "Enhance", icon: <Lightning size={16} />, credits: 0 },
-      { id: "upscale-hd", label: "Upscale", icon: <MagnifyingGlassPlus size={16} />, credits: 3 },
-      { id: "bg-remove", label: "Remove BG", icon: <Scissors size={16} />, credits: 2 },
+      { id: "auto-enhance", label: "補正", icon: <Lightning size={14} />, credits: 0 },
+      { id: "upscale-hd", label: "HD化", icon: <MagnifyingGlassPlus size={14} />, credits: 3 },
+      { id: "bg-remove", label: "背景除去", icon: <Scissors size={14} />, credits: 2 },
     ];
   }
 
   return [
-    { id: "auto-enhance", label: "Auto Enhance", icon: <Lightning size={16} />, credits: 0 },
-    { id: "bg-remove", label: "Remove BG", icon: <Scissors size={16} />, credits: 2 },
-    { id: "upscale-lite", label: "Upscale", icon: <MagnifyingGlassPlus size={16} />, credits: 0 },
-    { id: "style", label: "Style", icon: <Palette size={16} />, credits: 3 },
+    { id: "auto-enhance", label: "補正", icon: <Lightning size={14} />, credits: 0 },
+    { id: "bg-remove", label: "背景除去", icon: <Scissors size={14} />, credits: 2 },
+    { id: "upscale-lite", label: "HD化", icon: <MagnifyingGlassPlus size={14} />, credits: 0 },
+    { id: "style", label: "スタイル", icon: <Palette size={14} />, credits: 3 },
   ];
 }
 
@@ -55,29 +55,30 @@ export function ContextTaskbar(props: ContextTaskbarProps) {
   if (!props.hasImage) return null;
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-lg)]
-      bg-[var(--color-surface)] border border-[var(--color-border)]
-      shadow-[var(--shadow-md)]">
+    <div className="inline-flex items-center gap-1 px-1.5 py-1 rounded-[var(--radius-md)]
+      bg-black/60 backdrop-blur-sm border border-white/10">
 
       {isProcessing ? (
-        <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-          <SpinnerGap size={16} className="animate-spin text-[var(--color-accent)]" />
-          <span>{aiProgress}</span>
+        <div className="flex items-center gap-1.5 px-2 py-0.5 text-xs text-white/80">
+          <SpinnerGap size={12} className="animate-spin" />
+          <span className="max-w-[120px] truncate">{aiProgress}</span>
         </div>
       ) : (
         actions.map((action) => (
           <button
             key={action.id}
             onClick={() => props.onFeatureSelect(action.id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)]
-              bg-[var(--color-bg)] hover:bg-[var(--color-accent-soft)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)]
-              text-sm text-[var(--color-text)] transition-all duration-[var(--transition-base)]
-              hover:scale-105 active:scale-95"
+            title={`${action.label}${action.credits > 0 ? ` (${action.credits} クレジット)` : " (無料)"}`}
+            className="flex items-center gap-1 px-2 py-1 rounded-[var(--radius-sm)]
+              hover:bg-white/15 text-white/80 hover:text-white
+              text-xs transition-all duration-150"
           >
-            <span>{action.icon}</span>
-            <span>{action.label}</span>
-            {action.credits > 0 && (
-              <span className="text-xs text-[var(--color-warning)] ml-1">{action.credits}cr</span>
+            {action.icon}
+            <span className="hidden sm:inline">{action.label}</span>
+            {action.credits > 0 ? (
+              <span className="text-[10px] text-amber-400">{action.credits}</span>
+            ) : (
+              <span className="text-[10px] text-emerald-400">無料</span>
             )}
           </button>
         ))

@@ -14,8 +14,8 @@ interface CompareViewProps {
 export function CompareView({
   beforeImage,
   afterImage,
-  beforeLabel = "Before",
-  afterLabel = "After",
+  beforeLabel = "変更前",
+  afterLabel = "変更後",
 }: CompareViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [sliderPosition, setSliderPosition] = useState(50);

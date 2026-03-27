@@ -1,4 +1,4 @@
-export async function generateGeminiImage(prompt: string, model: string = "gemini-2.0-flash-exp"): Promise<string> {
+export async function generateGeminiImage(prompt: string, model: string = "gemini-2.5-flash-image"): Promise<string> {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY not configured");
 

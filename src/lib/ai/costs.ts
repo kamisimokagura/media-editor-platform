@@ -19,16 +19,6 @@ export const OPERATION_COSTS: Record<string, number> = {
   "style": 3,
   "upscale": 2,
 
-  // Video generation
-  "video": 10,
-  "video:seedance-2": 8,
-  "video:kling-3": 10,
-  "video:veo-3": 12,
-  "video:wan-2.6": 8,
-  "video:pika-2.5": 8,
-  "video:sora": 15,
-  "video:grok-imagine": 10,
-
   // Chat
   "chat": 1,
 };

@@ -4,6 +4,21 @@ import React from "react";
 import { FEATURE_CONFIG } from "@/lib/ai/router";
 import { useAIStore } from "@/stores/aiStore";
 
+/** Feature ID → 日本語ラベル */
+const FEATURE_LABELS: Record<string, string> = {
+  "auto-enhance": "自動補正",
+  "upscale-lite": "軽量アップスケール",
+  "denoise":      "ノイズ除去",
+  "face-detect":  "顔検出",
+  "smart-crop":   "スマートクロップ",
+  "bg-remove":    "背景除去",
+  "upscale-hd":   "HD アップスケール",
+  "inpaint":      "塗りつぶし",
+  "erase":        "消しゴム",
+  "expand":       "画像拡張",
+  "style":        "スタイル変換",
+};
+
 const FREE_FEATURES = Object.entries(FEATURE_CONFIG).filter(([, c]) => c.tier === "free");
 const PAID_FEATURES = Object.entries(FEATURE_CONFIG).filter(([, c]) => c.tier === "paid");
 
@@ -18,11 +33,11 @@ export function AIToolbar({ onFeatureSelect, disabled }: AIToolbarProps) {
 
   return (
     <div className="flex flex-col gap-4 p-3">
-      <h3 className="text-sm font-semibold text-[var(--color-text)] uppercase tracking-wider">AI Tools</h3>
+      <h3 className="text-sm font-semibold text-[var(--color-text)] tracking-wider">AI ツール</h3>
 
-      {/* Free Features */}
+      {/* 無料機能 */}
       <div className="space-y-1">
-        <p className="text-xs text-[var(--color-success)] font-medium mb-2">Free</p>
+        <p className="text-xs text-[var(--color-success)] font-medium mb-2">無料</p>
         {FREE_FEATURES.map(([id]) => (
           <button
             key={id}
@@ -33,15 +48,15 @@ export function AIToolbar({ onFeatureSelect, disabled }: AIToolbarProps) {
               text-sm text-[var(--color-text)] transition-all duration-[var(--transition-base)]
               disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <span className="capitalize">{id.replace(/-/g, " ")}</span>
-            <span className="text-xs text-[var(--color-success)] font-medium">FREE</span>
+            <span>{FEATURE_LABELS[id] ?? id}</span>
+            <span className="text-xs text-[var(--color-success)] font-medium">無料</span>
           </button>
         ))}
       </div>
 
-      {/* Paid Features */}
+      {/* 有料機能 */}
       <div className="space-y-1">
-        <p className="text-xs text-[var(--color-warning)] font-medium mb-2">Pro</p>
+        <p className="text-xs text-[var(--color-warning)] font-medium mb-2">有料（クレジット消費）</p>
         {PAID_FEATURES.map(([id, config]) => (
           <button
             key={id}
@@ -52,8 +67,8 @@ export function AIToolbar({ onFeatureSelect, disabled }: AIToolbarProps) {
               text-sm text-[var(--color-text)] transition-all duration-[var(--transition-base)]
               disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <span className="capitalize">{id.replace(/-/g, " ")}</span>
-            <span className="text-xs text-[var(--color-warning)] font-medium">{config.credits}cr</span>
+            <span>{FEATURE_LABELS[id] ?? id}</span>
+            <span className="text-xs text-[var(--color-warning)] font-medium">{config.credits} クレジット</span>
           </button>
         ))}
       </div>

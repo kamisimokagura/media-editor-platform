@@ -14,14 +14,32 @@ interface BillingError {
   response: NextResponse;
 }
 
+/** Check if dev billing bypass is enabled (development only) */
+function isDevBypass(): boolean {
+  return process.env.NODE_ENV === "development" && process.env.DEV_BYPASS_BILLING === "true";
+}
+
 /**
  * Reserve credits before an AI operation.
  * Returns user info on success, or a NextResponse error.
+ * In development with DEV_BYPASS_BILLING=true, skips auth and credits.
  */
 export async function reserveCredits(
   operation: string,
   model?: string
 ): Promise<BillingResult | BillingError> {
+  const cost = getOperationCost(operation, model);
+
+  // Dev bypass: skip auth and credit consumption
+  if (isDevBypass()) {
+    console.log(`[billing-guard] DEV BYPASS: ${operation}${model ? `:${model}` : ""} (cost: ${cost}cr)`);
+    return {
+      userId: "dev-local-user",
+      cost,
+      creditsRemaining: 99999,
+    };
+  }
+
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -30,8 +48,6 @@ export async function reserveCredits(
       response: NextResponse.json({ error: "認証が必要です" }, { status: 401 }),
     };
   }
-
-  const cost = getOperationCost(operation, model);
 
   const admin = await createServerSupabaseAdmin();
   const { data, error } = await admin.rpc("consume_credits", {
@@ -71,6 +87,11 @@ export async function reserveCredits(
  * Refund credits after a failed AI operation.
  */
 export async function refundCredits(userId: string, operation: string, model?: string): Promise<boolean> {
+  if (isDevBypass()) {
+    console.log(`[billing-guard] DEV BYPASS: refund skipped for ${operation}`);
+    return true;
+  }
+
   const cost = getOperationCost(operation, model);
 
   try {
@@ -99,6 +120,11 @@ export async function logUsage(
   cost: number,
   metadata?: Record<string, unknown>
 ): Promise<void> {
+  if (isDevBypass()) {
+    console.log(`[billing-guard] DEV BYPASS: logged ${operation} (${cost}cr)`, metadata);
+    return;
+  }
+
   try {
     const admin = await createServerSupabaseAdmin();
     await admin.from("ai_usage_log").insert({

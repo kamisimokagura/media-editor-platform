@@ -8,6 +8,16 @@ const TIER_LIMITS: Record<string, number> = {
 };
 
 export async function GET() {
+  // Dev bypass: return unlimited credits
+  if (process.env.NODE_ENV === "development" && process.env.DEV_BYPASS_BILLING === "true") {
+    return NextResponse.json({
+      tier: "ai_pro",
+      credits_remaining: 99999,
+      credits_limit: 99999,
+      reset_at: null,
+    });
+  }
+
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.json({ error: "Supabase未設定" }, { status: 503 });
   }

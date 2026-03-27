@@ -108,8 +108,58 @@ export function ImageEditor({
   const { initCanvas, applyAdjustments, exportImage, resizeImage, cropImage } = useImageProcessor();
   const imageFiles = mediaFiles.filter((file) => file.type === "image");
 
-  const { chatOpen, setChatOpen } = useAIStore();
+  const { chatOpen, setChatOpen, layers: aiLayers } = useAIStore();
   const { executeFeature } = useAIFeature();
+  const setOriginalImageData = useEditorStore((state) => state.setOriginalImageData);
+
+  /** Apply an AI result layer to the main canvas */
+  const handleApplyAILayer = useCallback((layerId: string) => {
+    const layer = aiLayers.find(l => l.id === layerId);
+    if (!layer) {
+      toast.error("レイヤーが見つかりません");
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+
+    const applyImageData = (imgData: ImageData) => {
+      canvas.width = imgData.width;
+      canvas.height = imgData.height;
+      ctx.putImageData(imgData, 0, 0);
+      setOriginalImageData(imgData);
+      toast.success("AIレイヤーをキャンバスに適用しました");
+    };
+
+    // If the layer has ImageData, apply directly
+    if (layer.imageData) {
+      applyImageData(layer.imageData);
+      return;
+    }
+
+    // If the layer has an image URL, load and draw
+    if (layer.imageUrl) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        ctx.drawImage(img, 0, 0);
+        const newImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        setOriginalImageData(newImageData);
+        toast.success("AIレイヤーをキャンバスに適用しました");
+      };
+      img.onerror = () => {
+        toast.error("AI画像の読み込みに失敗しました");
+      };
+      img.src = layer.imageUrl;
+      return;
+    }
+
+    toast.error("レイヤーに画像データがありません");
+  }, [aiLayers, setOriginalImageData]);
 
   // Canvas coordinate helper
   const getCanvasCoordinates = useCallback((clientX: number, clientY: number) => {
@@ -331,12 +381,148 @@ export function ImageEditor({
 
   // ─── Handlers ───────────────────────────────────────
 
+  /** Get current canvas as base64 PNG (no data: prefix) */
+  const getCanvasBase64 = useCallback((): string | null => {
+    if (!canvasRef.current) return null;
+    const dataUrl = canvasRef.current.toDataURL("image/png");
+    return dataUrl.replace(/^data:image\/\w+;base64,/, "");
+  }, []);
+
+  /** Get current canvas as ImageData */
+  const getCanvasImageData = useCallback((): ImageData | null => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  }, []);
+
   const handleAIFeatureSelect = useCallback((featureId: string) => {
-    executeFeature(featureId, async () => {
-      toast.info(`${featureId} の処理はAPIキー設定後に動作します`);
-      return null;
-    });
-  }, [executeFeature]);
+    // ── Browser-side free features ──
+    if (featureId === "auto-enhance") {
+      executeFeature(featureId, async () => {
+        const imgData = getCanvasImageData();
+        if (!imgData) { toast.error("画像を先に読み込んでください"); return null; }
+        const { analyzeAndEnhance } = await import("@/lib/ai/browser/auto-enhance");
+        const result = analyzeAndEnhance(imgData);
+        // Apply the suggested adjustments
+        const merged = { ...imageAdjustments };
+        for (const [key, value] of Object.entries(result.adjustments)) {
+          (merged as unknown as Record<string, number>)[key] = value as number;
+        }
+        setImageAdjustments(merged);
+        applyAdjustments(merged);
+        return { imageData: imgData };
+      });
+      return;
+    }
+
+    // ── API-based paid features ──
+    if (featureId === "bg-remove") {
+      executeFeature(featureId, async () => {
+        const base64 = getCanvasBase64();
+        if (!base64) { toast.error("画像を先に読み込んでください"); return null; }
+        const res = await fetch("/api/ai/remove-bg", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64 }),
+        });
+        if (!res.ok) {
+          const err = await res.json() as { error: string };
+          throw new Error(err.error ?? "背景除去に失敗しました");
+        }
+        const data = await res.json() as { image: string };
+        return { imageUrl: `data:image/png;base64,${data.image}` };
+      });
+      return;
+    }
+
+    if (featureId === "style") {
+      executeFeature(featureId, async () => {
+        const base64 = getCanvasBase64();
+        if (!base64) { toast.error("画像を先に読み込んでください"); return null; }
+        const res = await fetch("/api/ai/style", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: `data:image/png;base64,${base64}`, style: "anime" }),
+        });
+        if (!res.ok) {
+          const err = await res.json() as { error: string };
+          throw new Error(err.error ?? "スタイル変換に失敗しました");
+        }
+        const data = await res.json() as { image_url: string };
+        return { imageUrl: data.image_url };
+      });
+      return;
+    }
+
+    if (featureId === "erase" || featureId === "inpaint" || featureId === "expand") {
+      executeFeature(featureId, async () => {
+        const base64 = getCanvasBase64();
+        if (!base64) { toast.error("画像を先に読み込んでください"); return null; }
+        const res = await fetch(`/api/ai/${featureId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: `data:image/png;base64,${base64}` }),
+        });
+        if (!res.ok) {
+          const err = await res.json() as { error: string };
+          throw new Error(err.error ?? "処理に失敗しました");
+        }
+        const data = await res.json() as { image?: string; image_url?: string };
+        const src = data.image ? `data:image/png;base64,${data.image}` : data.image_url;
+        return src ? { imageUrl: src } : null;
+      });
+      return;
+    }
+
+    if (featureId === "upscale-lite") {
+      executeFeature(featureId, async () => {
+        const imgData = getCanvasImageData();
+        if (!imgData) { toast.error("画像を先に読み込んでください"); return null; }
+        // Simple canvas-based 2x upscale (bicubic-like via browser)
+        const canvas = document.createElement("canvas");
+        canvas.width = imgData.width * 2;
+        canvas.height = imgData.height * 2;
+        const ctx = canvas.getContext("2d")!;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        // Put original into temp canvas
+        const tmpCanvas = document.createElement("canvas");
+        tmpCanvas.width = imgData.width;
+        tmpCanvas.height = imgData.height;
+        tmpCanvas.getContext("2d")!.putImageData(imgData, 0, 0);
+        // Draw scaled
+        ctx.drawImage(tmpCanvas, 0, 0, canvas.width, canvas.height);
+        const upscaledData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        return { imageData: upscaledData };
+      });
+      return;
+    }
+
+    if (featureId === "upscale-hd") {
+      executeFeature(featureId, async () => {
+        const base64 = getCanvasBase64();
+        if (!base64) { toast.error("画像を先に読み込んでください"); return null; }
+        // Upload as data URL for Replicate
+        const res = await fetch("/api/ai/upscale", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image_url: `data:image/png;base64,${base64}`, scale: 2 }),
+        });
+        if (!res.ok) {
+          const err = await res.json() as { error: string };
+          throw new Error(err.error ?? "アップスケールに失敗しました");
+        }
+        const data = await res.json() as { image_url: string };
+        return { imageUrl: data.image_url };
+      });
+      return;
+    }
+
+    // Fallback for any unhandled feature
+    toast.info(`${featureId} は現在準備中です`);
+  }, [executeFeature, getCanvasBase64, getCanvasImageData, imageAdjustments, setImageAdjustments, applyAdjustments]);
 
   const handleResizeWidthChange = (newWidth: number) => {
     setResizeWidth(newWidth);
@@ -562,13 +748,13 @@ export function ImageEditor({
               )}
 
               <AIResultLayer
-                onApply={(layerId) => toast.success(`Layer ${layerId} applied`)}
-                onDiscard={(layerId) => toast.info(`Layer ${layerId} discarded`)}
+                onApply={handleApplyAILayer}
+                onDiscard={() => toast.info("レイヤーを削除しました")}
               />
             </div>
 
-            {/* Context Taskbar - overlay at bottom */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10">
+            {/* Context Taskbar - compact overlay at bottom-left */}
+            <div className="absolute bottom-3 left-3 z-10">
               <ContextTaskbar
                 hasImage={!!currentImage}
                 onFeatureSelect={handleAIFeatureSelect}
@@ -772,7 +958,7 @@ export function ImageEditor({
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleFullReset}>
                   <span className="hidden sm:inline">リセット</span>
-                  <span className="sm:hidden text-xs">Reset</span>
+                  <span className="sm:hidden text-xs">リセット</span>
                 </Button>
                 <div className="hidden sm:flex items-center gap-2">
                   <Button variant="secondary" size="sm" onClick={() => exportSettings.handleQuickExport("png")}>PNG</Button>
@@ -788,7 +974,7 @@ export function ImageEditor({
                   className={`p-1.5 sm:p-2 rounded-[var(--radius-md)] transition-colors ${
                     chatOpen ? "bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-accent-soft)]"
                   }`}
-                  title="AI Chat"
+                  title="AI チャット"
                 >
                   <ChatCircle size={20} weight="bold" className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>

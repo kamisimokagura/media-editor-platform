@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { AIChatAction, LLMProvider } from "@/types/ai";
 
-const LLM_OPTIONS: Array<{ value: LLMProvider; label: string }> = [
-  { value: "gemini", label: "Gemini (Free)" },
-  { value: "claude", label: "Claude (2cr)" },
-  { value: "grok", label: "Grok (1cr)" },
+const LLM_OPTIONS: Array<{ value: LLMProvider; label: string; disabled?: boolean }> = [
+  { value: "grok", label: "Grok（1クレジット）" },
+  { value: "gemini", label: "Gemini（1クレジット）" },
+  { value: "claude", label: "Claude（準備中）", disabled: true },
 ];
 
 interface AIChatPanelProps {
@@ -51,9 +51,9 @@ export function AIChatPanel({ isOpen, onClose, imageContext, onAction }: AIChatP
 
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)]">
-        <h3 className="text-sm font-semibold text-[var(--color-text)]">AI Assistant</h3>
+        <h3 className="text-sm font-semibold text-[var(--color-text)]">AI アシスタント</h3>
         <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={clearChat} icon={<Trash size={14} />}>Clear</Button>
+          <Button variant="ghost" size="sm" onClick={clearChat} icon={<Trash size={14} />}>クリア</Button>
           <button onClick={onClose} className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--color-accent-soft)] text-[var(--color-text-muted)] transition-colors duration-[var(--transition-fast)]">
             <X size={16} />
           </button>
@@ -96,7 +96,7 @@ export function AIChatPanel({ isOpen, onClose, imageContext, onAction }: AIChatP
                         text-[var(--color-accent)] transition-colors duration-[var(--transition-fast)]"
                     >
                       {action.label}
-                      {action.credits > 0 && <span className="ml-1 text-[var(--color-warning)]">{action.credits}cr</span>}
+                      {action.credits > 0 && <span className="ml-1 text-[var(--color-warning)]">{action.credits}</span>}
                     </button>
                   ))}
                 </div>
@@ -133,7 +133,7 @@ export function AIChatPanel({ isOpen, onClose, imageContext, onAction }: AIChatP
           />
           {streaming ? (
             <Button variant="danger" size="md" onClick={stopStreaming} icon={<Stop size={16} />}>
-              Stop
+              停止
             </Button>
           ) : (
             <Button
@@ -143,7 +143,7 @@ export function AIChatPanel({ isOpen, onClose, imageContext, onAction }: AIChatP
               disabled={!input.trim()}
               icon={<PaperPlaneRight size={16} />}
             >
-              Send
+              送信
             </Button>
           )}
         </div>

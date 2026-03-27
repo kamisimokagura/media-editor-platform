@@ -6,7 +6,11 @@ import { Header } from "@/components/layout";
 import { useFFmpeg } from "@/hooks/useFFmpeg";
 import { useEditorStore } from "@/stores/editorStore";
 import { Button, Card, DropZone, ProgressBar, Slider } from "@/components/ui";
-import { ANALYTICS_EVENTS, trackClientEvent, trackPageView } from "@/lib/analytics/client";
+import {
+  ANALYTICS_EVENTS,
+  trackClientEvent,
+  trackPageView,
+} from "@/lib/analytics/client";
 import { toast } from "@/stores/toastStore";
 import { isHeicFile, ensureBrowserCompatibleImage } from "@/lib/heicConverter";
 import { isRawFile, ensureBrowserCompatibleRawImage } from "@/lib/rawConverter";
@@ -41,7 +45,11 @@ const videoFormatOptions: { value: OutputFormat; label: string }[] = [
   { value: "gif", label: "GIF" },
 ];
 
-const imageFormatOptions: { value: ImageFormat; label: string; description: string }[] = [
+const imageFormatOptions: {
+  value: ImageFormat;
+  label: string;
+  description: string;
+}[] = [
   { value: "webp", label: "WebP", description: "軽量で高画質" },
   { value: "png", label: "PNG", description: "可逆圧縮 / 透過対応" },
   { value: "jpg", label: "JPG", description: "高互換で軽量" },
@@ -50,15 +58,25 @@ const imageFormatOptions: { value: ImageFormat; label: string; description: stri
   { value: "gif", label: "GIF", description: "アニメ対応" },
 ];
 
-function getImageMimeInfo(format: ImageFormat): { mimeType: string; extension: string } {
+function getImageMimeInfo(format: ImageFormat): {
+  mimeType: string;
+  extension: string;
+} {
   switch (format) {
-    case "png": return { mimeType: "image/png", extension: "png" };
-    case "jpg": return { mimeType: "image/jpeg", extension: "jpg" };
-    case "webp": return { mimeType: "image/webp", extension: "webp" };
-    case "avif": return { mimeType: "image/avif", extension: "avif" };
-    case "bmp": return { mimeType: "image/bmp", extension: "bmp" };
-    case "gif": return { mimeType: "image/gif", extension: "gif" };
-    default: return { mimeType: "image/webp", extension: "webp" };
+    case "png":
+      return { mimeType: "image/png", extension: "png" };
+    case "jpg":
+      return { mimeType: "image/jpeg", extension: "jpg" };
+    case "webp":
+      return { mimeType: "image/webp", extension: "webp" };
+    case "avif":
+      return { mimeType: "image/avif", extension: "avif" };
+    case "bmp":
+      return { mimeType: "image/bmp", extension: "bmp" };
+    case "gif":
+      return { mimeType: "image/gif", extension: "gif" };
+    default:
+      return { mimeType: "image/webp", extension: "webp" };
   }
 }
 
@@ -78,7 +96,8 @@ export default function ConvertPage() {
 
   const [imageFormat, setImageFormat] = useState<ImageFormat>("webp");
   const [imageQuality, setImageQuality] = useState(90);
-  const [imageOutputMode, setImageOutputMode] = useState<ImageOutputMode>("file");
+  const [imageOutputMode, setImageOutputMode] =
+    useState<ImageOutputMode>("file");
   const [base64Result, setBase64Result] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [, setCurrentProcessingId] = useState<string | null>(null);
@@ -148,7 +167,10 @@ export default function ConvertPage() {
           img.src = previewUrl;
           await new Promise<void>((resolve) => {
             img.onload = () => {
-              item.dimensions = { width: img.naturalWidth, height: img.naturalHeight };
+              item.dimensions = {
+                width: img.naturalWidth,
+                height: img.naturalHeight,
+              };
               resolve();
             };
             img.onerror = () => resolve();
@@ -171,7 +193,7 @@ export default function ConvertPage() {
 
       setQueue((prev) => [...prev, ...newItems]);
     },
-    [mode, queue.length]
+    [mode, queue.length],
   );
 
   const removeFromQueue = (id: string) => {
@@ -206,7 +228,7 @@ export default function ConvertPage() {
     img.src = item.previewUrl;
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve();
-      img.onerror = () => reject(new Error("Failed to load image"));
+      img.onerror = () => reject(new Error("画像の読み込みに失敗しました"));
     });
 
     const canvas = document.createElement("canvas");
@@ -225,15 +247,22 @@ export default function ConvertPage() {
     ctx.drawImage(img, 0, 0);
 
     const { mimeType, extension } = getImageMimeInfo(imageFormat);
-    const quality = imageFormat === "png" || imageFormat === "bmp" ? undefined : imageQuality / 100;
+    const quality =
+      imageFormat === "png" || imageFormat === "bmp"
+        ? undefined
+        : imageQuality / 100;
 
     if (imageOutputMode === "base64") {
       try {
         const dataUrl = canvas.toDataURL(mimeType, quality);
-        setBase64Result((prev) => prev ? prev + "\n---\n" + dataUrl : dataUrl);
+        setBase64Result((prev) =>
+          prev ? prev + "\n---\n" + dataUrl : dataUrl,
+        );
       } catch {
         const dataUrl = canvas.toDataURL("image/webp", imageQuality / 100);
-        setBase64Result((prev) => prev ? prev + "\n---\n" + dataUrl : dataUrl);
+        setBase64Result((prev) =>
+          prev ? prev + "\n---\n" + dataUrl : dataUrl,
+        );
       }
       return true;
     }
@@ -255,18 +284,20 @@ export default function ConvertPage() {
                 resolve(!!fallbackBlob);
               },
               "image/webp",
-              imageQuality / 100
+              imageQuality / 100,
             );
           }
         },
         mimeType,
-        quality
+        quality,
       );
     });
   };
 
   const handleConvertAll = async () => {
-    const pendingItems = queue.filter((q) => q.status === "pending" || q.status === "error");
+    const pendingItems = queue.filter(
+      (q) => q.status === "pending" || q.status === "error",
+    );
     if (!pendingItems.length) return;
 
     setIsProcessing(true);
@@ -280,7 +311,11 @@ export default function ConvertPage() {
       if (abortRef.current) break;
 
       setCurrentProcessingId(item.id);
-      setQueue((prev) => prev.map((q) => q.id === item.id ? { ...q, status: "processing" } : q));
+      setQueue((prev) =>
+        prev.map((q) =>
+          q.id === item.id ? { ...q, status: "processing" } : q,
+        ),
+      );
 
       try {
         let success = false;
@@ -297,13 +332,17 @@ export default function ConvertPage() {
         }
 
         setQueue((prev) =>
-          prev.map((q) => q.id === item.id ? { ...q, status: success ? "done" : "error" } : q)
+          prev.map((q) =>
+            q.id === item.id ? { ...q, status: success ? "done" : "error" } : q,
+          ),
         );
         if (success) successCount++;
         else errorCount++;
       } catch (error) {
         console.error(`Conversion error for ${item.file.name}:`, error);
-        setQueue((prev) => prev.map((q) => q.id === item.id ? { ...q, status: "error" } : q));
+        setQueue((prev) =>
+          prev.map((q) => (q.id === item.id ? { ...q, status: "error" } : q)),
+        );
         errorCount++;
       }
     }
@@ -312,7 +351,9 @@ export default function ConvertPage() {
     setIsProcessing(false);
 
     if (successCount > 0) {
-      toast.success(`${successCount}件の変換が完了しました${errorCount > 0 ? ` (${errorCount}件エラー)` : ""}`);
+      toast.success(
+        `${successCount}件の変換が完了しました${errorCount > 0 ? ` (${errorCount}件エラー)` : ""}`,
+      );
     } else if (errorCount > 0) {
       toast.error(`${errorCount}件の変換に失敗しました`);
     }
@@ -331,22 +372,32 @@ export default function ConvertPage() {
   };
 
   const handleExtractAudioAll = async () => {
-    const pendingItems = queue.filter((q) => q.status === "pending" || q.status === "error");
+    const pendingItems = queue.filter(
+      (q) => q.status === "pending" || q.status === "error",
+    );
     if (!pendingItems.length) return;
 
     setIsProcessing(true);
 
     for (const item of pendingItems) {
       setCurrentProcessingId(item.id);
-      setQueue((prev) => prev.map((q) => q.id === item.id ? { ...q, status: "processing" } : q));
+      setQueue((prev) =>
+        prev.map((q) =>
+          q.id === item.id ? { ...q, status: "processing" } : q,
+        ),
+      );
 
       const blob = await extractAudio(item.file);
       if (blob) {
         const baseName = item.file.name.replace(/\.[^/.]+$/, "");
         downloadBlob(blob, `${baseName}_audio.mp3`);
-        setQueue((prev) => prev.map((q) => q.id === item.id ? { ...q, status: "done" } : q));
+        setQueue((prev) =>
+          prev.map((q) => (q.id === item.id ? { ...q, status: "done" } : q)),
+        );
       } else {
-        setQueue((prev) => prev.map((q) => q.id === item.id ? { ...q, status: "error" } : q));
+        setQueue((prev) =>
+          prev.map((q) => (q.id === item.id ? { ...q, status: "error" } : q)),
+        );
       }
     }
 
@@ -359,10 +410,10 @@ export default function ConvertPage() {
     if (!base64Result) return;
     try {
       await navigator.clipboard.writeText(base64Result);
-      toast.success("Base64 text copied");
+      toast.success("Base64テキストをコピーしました");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to copy Base64 text");
+      toast.error("Base64テキストのコピーに失敗しました");
     }
   };
 
@@ -372,7 +423,9 @@ export default function ConvertPage() {
     downloadBlob(blob, `converted_${Date.now()}.txt`);
   };
 
-  const pendingCount = queue.filter((q) => q.status === "pending" || q.status === "error").length;
+  const pendingCount = queue.filter(
+    (q) => q.status === "pending" || q.status === "error",
+  ).length;
   const doneCount = queue.filter((q) => q.status === "done").length;
 
   return (
@@ -393,7 +446,10 @@ export default function ConvertPage() {
           <div className="flex justify-center mb-8">
             <div className="w-full max-w-md inline-grid grid-cols-2 bg-[var(--color-surface)] rounded-2xl p-1.5 shadow-[var(--shadow-lg)]">
               <button
-                onClick={() => { setMode("video"); clearQueue(); }}
+                onClick={() => {
+                  setMode("video");
+                  clearQueue();
+                }}
                 className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   mode === "video"
                     ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-md)]"
@@ -404,7 +460,10 @@ export default function ConvertPage() {
                 動画変換
               </button>
               <button
-                onClick={() => { setMode("image"); clearQueue(); }}
+                onClick={() => {
+                  setMode("image");
+                  clearQueue();
+                }}
                 className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   mode === "image"
                     ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-md)]"
@@ -436,10 +495,16 @@ export default function ConvertPage() {
                   <h3 className="text-sm font-semibold text-[var(--color-text)]">
                     ファイル一覧
                     <span className="ml-2 text-xs font-normal text-[var(--color-text-muted)]">
-                      {queue.length}件{doneCount > 0 ? ` (${doneCount}件完了)` : ""}
+                      {queue.length}件
+                      {doneCount > 0 ? ` (${doneCount}件完了)` : ""}
                     </span>
                   </h3>
-                  <Button variant="ghost" size="sm" onClick={clearQueue} disabled={isProcessing}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearQueue}
+                    disabled={isProcessing}
+                  >
                     すべてクリア
                   </Button>
                 </div>
@@ -452,20 +517,28 @@ export default function ConvertPage() {
                         item.status === "done"
                           ? "bg-green-50 dark:bg-green-900/10"
                           : item.status === "error"
-                          ? "bg-red-50 dark:bg-red-900/10"
-                          : item.status === "processing"
-                          ? "bg-[var(--color-accent-soft)]"
-                          : "bg-[var(--color-bg)]"
+                            ? "bg-red-50 dark:bg-red-900/10"
+                            : item.status === "processing"
+                              ? "bg-[var(--color-accent-soft)]"
+                              : "bg-[var(--color-bg)]"
                       }`}
                     >
                       {/* Thumbnail */}
                       {item.previewUrl && mode === "image" ? (
                         <div className="w-10 h-10 rounded-[var(--radius-md)] overflow-hidden bg-[var(--color-border)] flex-shrink-0">
-                          <img src={item.previewUrl} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={item.previewUrl}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                       ) : (
                         <div className="w-10 h-10 bg-[var(--color-accent)] rounded-[var(--radius-md)] flex items-center justify-center flex-shrink-0">
-                          <FilmStrip size={20} weight="bold" className="text-white" />
+                          <FilmStrip
+                            size={20}
+                            weight="bold"
+                            className="text-white"
+                          />
                         </div>
                       )}
 
@@ -476,14 +549,19 @@ export default function ConvertPage() {
                         </p>
                         <p className="text-xs text-[var(--color-text-muted)]">
                           {(item.file.size / 1024 / 1024).toFixed(2)} MB
-                          {item.dimensions && ` • ${item.dimensions.width}x${item.dimensions.height}`}
+                          {item.dimensions &&
+                            ` • ${item.dimensions.width}x${item.dimensions.height}`}
                         </p>
                       </div>
 
                       {/* Status indicator */}
                       <div className="flex-shrink-0">
                         {item.status === "done" && (
-                          <Check size={20} weight="bold" className="text-green-500" />
+                          <Check
+                            size={20}
+                            weight="bold"
+                            className="text-green-500"
+                          />
                         )}
                         {item.status === "error" && (
                           <X size={20} weight="bold" className="text-red-500" />
@@ -510,12 +588,16 @@ export default function ConvertPage() {
             {queue.length > 0 && mode === "video" && (
               <div className="space-y-7 mb-8">
                 <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">出力形式</label>
+                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">
+                    出力形式
+                  </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     {videoFormatOptions.map(({ value, label }) => (
                       <button
                         key={value}
-                        onClick={() => setVideoOptions({ ...videoOptions, format: value })}
+                        onClick={() =>
+                          setVideoOptions({ ...videoOptions, format: value })
+                        }
                         className={`px-4 py-3 rounded-[var(--radius-lg)] text-sm font-medium transition-all ${
                           videoOptions.format === value
                             ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-md)]"
@@ -528,22 +610,40 @@ export default function ConvertPage() {
                   </div>
                 </div>
                 {videoOptions.format !== "gif" && (
-                  <Slider label="品質" min={1} max={100} value={videoOptions.quality || 80} unit="%"
-                    onChange={(e) => setVideoOptions({ ...videoOptions, quality: parseInt(e.target.value, 10) })}
+                  <Slider
+                    label="品質"
+                    min={1}
+                    max={100}
+                    value={videoOptions.quality || 80}
+                    unit="%"
+                    onChange={(e) =>
+                      setVideoOptions({
+                        ...videoOptions,
+                        quality: parseInt(e.target.value, 10),
+                      })
+                    }
                   />
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">解像度</label>
+                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">
+                    解像度
+                  </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { label: "元のまま", width: undefined, height: undefined },
+                      {
+                        label: "元のまま",
+                        width: undefined,
+                        height: undefined,
+                      },
                       { label: "1080p", width: 1920, height: 1080 },
                       { label: "720p", width: 1280, height: 720 },
                       { label: "480p", width: 854, height: 480 },
                     ].map(({ label, width, height }) => (
                       <button
                         key={label}
-                        onClick={() => setVideoOptions({ ...videoOptions, width, height })}
+                        onClick={() =>
+                          setVideoOptions({ ...videoOptions, width, height })
+                        }
                         className={`px-3 py-2.5 rounded-[var(--radius-lg)] text-sm font-medium transition-all ${
                           videoOptions.width === width
                             ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-md)]"
@@ -561,7 +661,9 @@ export default function ConvertPage() {
             {queue.length > 0 && mode === "image" && (
               <div className="space-y-7 mb-8">
                 <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">出力形式</label>
+                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">
+                    出力形式
+                  </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     {imageFormatOptions.map(({ value, label, description }) => (
                       <button
@@ -574,7 +676,9 @@ export default function ConvertPage() {
                         }`}
                       >
                         <span className="block font-semibold">{label}</span>
-                        <span className={`block text-xs mt-1 ${imageFormat === value ? "text-white/80" : "text-[var(--color-text-muted)]"}`}>
+                        <span
+                          className={`block text-xs mt-1 ${imageFormat === value ? "text-white/80" : "text-[var(--color-text-muted)]"}`}
+                        >
                           {description}
                         </span>
                       </button>
@@ -583,7 +687,9 @@ export default function ConvertPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">出力タイプ</label>
+                  <label className="block text-sm font-medium text-[var(--color-text-muted)] mb-3">
+                    出力タイプ
+                  </label>
                   <div className="inline-flex bg-[var(--color-bg)] rounded-[var(--radius-lg)] p-1">
                     <button
                       onClick={() => setImageOutputMode("file")}
@@ -610,8 +716,15 @@ export default function ConvertPage() {
 
                 {imageFormat !== "png" && imageFormat !== "bmp" && (
                   <>
-                    <Slider label="品質" min={10} max={100} value={imageQuality} unit="%"
-                      onChange={(e) => setImageQuality(parseInt(e.target.value, 10))}
+                    <Slider
+                      label="品質"
+                      min={10}
+                      max={100}
+                      value={imageQuality}
+                      unit="%"
+                      onChange={(e) =>
+                        setImageQuality(parseInt(e.target.value, 10))
+                      }
                     />
                     <div className="flex flex-wrap gap-2 -mt-4">
                       {[
@@ -643,7 +756,7 @@ export default function ConvertPage() {
               <div className="mb-8">
                 <ProgressBar
                   progress={processingState.progress || 50}
-                  message={processingState.message || "Processing..."}
+                  message={processingState.message || "処理中..."}
                 />
               </div>
             )}
@@ -661,7 +774,7 @@ export default function ConvertPage() {
                       className="flex-1 !py-4"
                     >
                       {isLoading && !ffmpegLoaded
-                        ? "FFmpeg loading..."
+                        ? "FFmpeg読み込み中..."
                         : `${pendingCount}件を ${videoOptions.format.toUpperCase()} に変換`}
                     </Button>
                     <Button
@@ -692,10 +805,24 @@ export default function ConvertPage() {
             {base64Result && (
               <div className="mt-8 p-4 sm:p-5 bg-[var(--color-bg)] rounded-2xl">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                  <h3 className="font-semibold text-[var(--color-text)]">Base64 出力</h3>
+                  <h3 className="font-semibold text-[var(--color-text)]">
+                    Base64 出力
+                  </h3>
                   <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" onClick={handleCopyBase64}>Copy</Button>
-                    <Button variant="secondary" size="sm" onClick={handleDownloadBase64}>Download .txt</Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleCopyBase64}
+                    >
+                      コピー
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleDownloadBase64}
+                    >
+                      ダウンロード .txt
+                    </Button>
                   </div>
                 </div>
                 <textarea
@@ -704,14 +831,18 @@ export default function ConvertPage() {
                   className="w-full min-h-[180px] max-h-[320px] p-3 text-xs font-mono bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] text-[var(--color-text)]"
                 />
                 <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-                  Length: {base64Result.length.toLocaleString()} characters
+                  文字数: {base64Result.length.toLocaleString()}
                 </p>
               </div>
             )}
           </Card>
 
           <div className="mt-6 p-4 sm:p-6 bg-[var(--color-accent-soft)] rounded-2xl flex items-start gap-3">
-            <Info size={20} weight="bold" className="text-[var(--color-accent-text)] flex-shrink-0 mt-0.5" />
+            <Info
+              size={20}
+              weight="bold"
+              className="text-[var(--color-accent-text)] flex-shrink-0 mt-0.5"
+            />
             <p className="text-sm text-[var(--color-accent-text)] leading-relaxed">
               すべての処理はブラウザ内で実行されます。ファイルがサーバーにアップロードされることはありません。
             </p>

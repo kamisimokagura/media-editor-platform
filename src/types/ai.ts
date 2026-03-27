@@ -1,7 +1,7 @@
 export type AILayerType =
   | "auto-enhance" | "upscale" | "denoise" | "face-detect" | "smart-crop"
   | "bg-remove" | "upscale-hd" | "inpaint" | "erase" | "expand" | "style"
-  | "generate" | "video";
+  | "generate";
 
 export interface AILayer {
   id: string;

@@ -18,36 +18,36 @@ interface ChainSuggestion {
 
 const CHAIN_MAP: Partial<Record<AILayerType, ChainSuggestion[]>> = {
   "bg-remove": [
-    { id: "expand", label: "New Background", icon: <ImageSquare size={14} /> },
-    { id: "upscale-hd", label: "Upscale", icon: <MagnifyingGlassPlus size={14} /> },
+    { id: "expand", label: "背景を追加", icon: <ImageSquare size={14} /> },
+    { id: "upscale-hd", label: "高解像度化", icon: <MagnifyingGlassPlus size={14} /> },
   ],
   "upscale": [
-    { id: "denoise", label: "Denoise", icon: <Sparkle size={14} /> },
-    { id: "auto-enhance", label: "Auto Enhance", icon: <Lightning size={14} /> },
+    { id: "denoise", label: "ノイズ除去", icon: <Sparkle size={14} /> },
+    { id: "auto-enhance", label: "自動補正", icon: <Lightning size={14} /> },
   ],
   "upscale-hd": [
-    { id: "denoise", label: "Denoise", icon: <Sparkle size={14} /> },
-    { id: "auto-enhance", label: "Auto Enhance", icon: <Lightning size={14} /> },
+    { id: "denoise", label: "ノイズ除去", icon: <Sparkle size={14} /> },
+    { id: "auto-enhance", label: "自動補正", icon: <Lightning size={14} /> },
   ],
   "generate": [
-    { id: "upscale-hd", label: "Upscale", icon: <MagnifyingGlassPlus size={14} /> },
-    { id: "style", label: "Style Transfer", icon: <Palette size={14} /> },
+    { id: "upscale-hd", label: "高解像度化", icon: <MagnifyingGlassPlus size={14} /> },
+    { id: "style", label: "スタイル変換", icon: <Palette size={14} /> },
   ],
   "auto-enhance": [
-    { id: "upscale-lite", label: "Upscale", icon: <MagnifyingGlassPlus size={14} /> },
-    { id: "bg-remove", label: "Remove BG", icon: <Scissors size={14} /> },
+    { id: "upscale-lite", label: "高解像度化", icon: <MagnifyingGlassPlus size={14} /> },
+    { id: "bg-remove", label: "背景除去", icon: <Scissors size={14} /> },
   ],
   "style": [
-    { id: "upscale-hd", label: "Upscale", icon: <MagnifyingGlassPlus size={14} /> },
-    { id: "auto-enhance", label: "Enhance", icon: <Lightning size={14} /> },
+    { id: "upscale-hd", label: "高解像度化", icon: <MagnifyingGlassPlus size={14} /> },
+    { id: "auto-enhance", label: "自動補正", icon: <Lightning size={14} /> },
   ],
   "denoise": [
-    { id: "auto-enhance", label: "Enhance", icon: <Lightning size={14} /> },
-    { id: "upscale-lite", label: "Upscale", icon: <MagnifyingGlassPlus size={14} /> },
+    { id: "auto-enhance", label: "自動補正", icon: <Lightning size={14} /> },
+    { id: "upscale-lite", label: "高解像度化", icon: <MagnifyingGlassPlus size={14} /> },
   ],
   "inpaint": [
-    { id: "auto-enhance", label: "Enhance", icon: <Lightning size={14} /> },
-    { id: "upscale-hd", label: "Upscale", icon: <MagnifyingGlassPlus size={14} /> },
+    { id: "auto-enhance", label: "自動補正", icon: <Lightning size={14} /> },
+    { id: "upscale-hd", label: "高解像度化", icon: <MagnifyingGlassPlus size={14} /> },
   ],
 };
 
@@ -60,7 +60,7 @@ export function ToolChain({ lastActionType, onFeatureSelect }: ToolChainProps) {
   return (
     <div className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)]
       bg-[var(--color-accent-soft)] border border-[var(--color-accent)]">
-      <span className="text-xs text-[var(--color-accent-text)]">Next:</span>
+      <span className="text-xs text-[var(--color-accent-text)]">次のステップ:</span>
       {suggestions.map((s) => (
         <button
           key={s.id}
