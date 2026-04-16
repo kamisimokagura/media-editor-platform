@@ -43,12 +43,19 @@ export default function AccountPage() {
   // Fetch credit usage when AI is enabled
   useEffect(() => {
     if (!user || !AI_ENABLED) return;
-    setUsageLoading(true);
-    fetch("/api/ai/usage")
-      .then((r) => r.json())
-      .then((data) => setUsage(data))
-      .catch(() => {})
-      .finally(() => setUsageLoading(false));
+    const fetchUsage = async () => {
+      setUsageLoading(true);
+      try {
+        const r = await fetch("/api/ai/usage");
+        const data = await r.json();
+        setUsage(data);
+      } catch {
+        // ignore
+      } finally {
+        setUsageLoading(false);
+      }
+    };
+    void fetchUsage();
   }, [user]);
 
   const handleSignOut = async () => {
