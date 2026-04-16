@@ -18,6 +18,7 @@ import {
   List,
   X,
   UserSwitch,
+  User,
 } from "@phosphor-icons/react";
 
 const baseNavItems = [
@@ -60,8 +61,7 @@ export function Header() {
     setIsUserMenuOpen(false);
     setIsMobileMenuOpen(false);
     await signOut();
-    router.refresh();
-    router.push("/");
+    window.location.href = "/";
   };
 
   return (
@@ -165,6 +165,14 @@ export function Header() {
 
                     {/* Menu items */}
                     <div className="py-1">
+                      <Link
+                        href="/account"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-accent-soft)] transition-colors"
+                      >
+                        <User className="w-4 h-4" />
+                        アカウント
+                      </Link>
                       {AI_ENABLED && (
                         <Link
                           href="/subscription"
@@ -176,9 +184,10 @@ export function Header() {
                         </Link>
                       )}
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           setIsUserMenuOpen(false);
-                          router.push("/auth/signin");
+                          await signOut();
+                          window.location.href = "/auth/signin";
                         }}
                         className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-accent-soft)] transition-colors"
                       >
@@ -271,9 +280,10 @@ export function Header() {
                       </div>
                     </div>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         setIsMobileMenuOpen(false);
-                        router.push("/auth/signin");
+                        await signOut();
+                        window.location.href = "/auth/signin";
                       }}
                       className="w-full px-3 py-2.5 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-accent-soft)] rounded-[var(--radius-md)] transition-colors text-left"
                     >

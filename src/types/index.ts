@@ -35,7 +35,18 @@ export interface ProjectSettings {
   outputFormat: OutputFormat;
 }
 
-export type OutputFormat = "mp4" | "webm" | "gif" | "png" | "jpg" | "webp" | "avif" | "bmp" | "mov" | "avi" | "mkv";
+export type OutputFormat =
+  | "mp4"
+  | "webm"
+  | "gif"
+  | "png"
+  | "jpg"
+  | "webp"
+  | "avif"
+  | "bmp"
+  | "mov"
+  | "avi"
+  | "mkv";
 
 // Timeline Types
 export interface Timeline {
@@ -149,7 +160,7 @@ export interface ProcessingState {
   error?: string;
 }
 
-// User Types (for NextAuth)
+// User Types
 export interface User {
   id: string;
   email: string;

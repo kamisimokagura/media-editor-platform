@@ -358,6 +358,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen w-full bg-[var(--color-bg)] overflow-x-hidden">
+      {/* Marquee keyframes */}
+      <style>{`
+        @keyframes marquee-ltr {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes marquee-rtl {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
+
       {/* Scroll Progress */}
       <div
         ref={scrollProgressRef}
@@ -368,434 +380,662 @@ export default function HomePage() {
       <Header />
 
       <main className="w-full">
-        {/* Hero Section */}
+        {/* ═══════════════════════════════════════
+            HERO — Split layout
+        ═══════════════════════════════════════ */}
         <section
           ref={heroRef}
-          className="relative min-h-screen flex items-center justify-center overflow-hidden hero-gradient"
+          className="relative min-h-screen flex items-center overflow-hidden hero-gradient"
         >
-          {/* Animated Background Elements */}
+          {/* Background */}
           <div className="absolute inset-0 -z-10">
-            {/* Grid Pattern */}
             <div className="absolute inset-0 grid-pattern" />
-
-            {/* Floating Orbs with Parallax */}
             <div
               ref={orbOneRef}
-              className="orb w-[500px] h-[500px] bg-[var(--color-accent)]/20 top-1/4 left-1/4 -translate-x-1/2"
+              className="orb w-[700px] h-[700px] bg-[var(--color-accent)]/15 -top-1/3 right-[-20%]"
               style={{ transform: "translate(0px, 0px)" }}
             />
             <div
               ref={orbTwoRef}
-              className="orb w-[400px] h-[400px] bg-[var(--color-accent)]/15 bottom-1/4 right-1/4 translate-x-1/2"
+              className="orb w-[400px] h-[400px] bg-[var(--color-accent)]/10 bottom-0 right-[25%]"
               style={{ transform: "translate(0px, 0px)" }}
             />
             <div
               ref={orbThreeRef}
-              className="orb w-[300px] h-[300px] bg-[var(--color-accent)]/10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              style={{ transform: "translate(0px, 0px)" }}
+              className="orb w-[350px] h-[350px]"
+              style={{
+                background: "rgba(236, 72, 153, 0.1)",
+                top: "60%",
+                left: "5%",
+                transform: "translate(0px, 0px)",
+              }}
             />
-
-            {/* Gradient Glow - Centered */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-[var(--color-accent)]/10 via-[var(--color-accent)]/5 to-transparent blur-3xl" />
           </div>
 
-          <div className="relative z-10 w-full flex justify-center py-28 sm:py-36">
-            <div className="w-full max-w-5xl px-8 sm:px-12 lg:px-20 text-center">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-card mb-12 stagger-item">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-success)] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[var(--color-success)]"></span>
-                </span>
-                <span className="text-sm font-medium text-[var(--color-text)]">
-                  完全無料・登録不要で今すぐ使える
-                </span>
-              </div>
+          <div className="relative z-10 w-full pt-24 pb-16">
+            <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+              {/* LEFT: content */}
+              <div className="flex-1 min-w-0">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-8 stagger-item">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-success)] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-success)]" />
+                  </span>
+                  <span className="text-xs font-medium text-[var(--color-text)]">
+                    無料 · 登録不要 · 完全ローカル
+                  </span>
+                </div>
 
-              {/* Main Heading */}
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 sm:mb-12 stagger-item">
-                <span className="block text-[var(--color-text)] mb-2 sm:mb-4">
-                  ブラウザだけで
-                </span>
-                <span className="block gradient-text-animated">プロ級編集</span>
-              </h1>
+                {/* Brand name — huge */}
+                <h1
+                  className="font-black tracking-tighter leading-none gradient-text-animated stagger-item mb-4"
+                  style={{ fontSize: "clamp(72px, 11vw, 152px)" }}
+                >
+                  MediEdi!
+                </h1>
+                <p className="text-2xl sm:text-3xl font-medium text-[var(--color-text-muted)] mb-10 stagger-item">
+                  ブラウザで、本格的に。
+                </p>
 
-              {/* Subtitle */}
-              <p className="text-base sm:text-xl lg:text-2xl text-[var(--color-text-muted)] max-w-2xl mx-auto mb-10 sm:mb-16 stagger-item leading-relaxed px-2 sm:px-0">
-                形式変換、画像編集、AI高画質化まで。
-                <br className="hidden sm:block" />
-                <span className="font-semibold text-[var(--color-text)]">
-                  サーバーにアップロードしない
-                </span>
-                から、プライバシーも安心。
-              </p>
-
-              {/* Quick Upload - Both video and image supported */}
-              <div className="max-w-2xl mx-auto mb-16 stagger-item">
-                <div className="relative group">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-accent-hover)] to-[var(--color-accent)] rounded-3xl blur-xl opacity-20 group-hover:opacity-35 transition-opacity duration-500" />
-                  <div className="relative">
-                    <DropZone
-                      onFilesSelected={handleFilesSelected}
-                      accept="all"
-                      className="!border-2 !border-dashed !border-[var(--color-border)] hover:!border-[var(--color-accent)] transition-colors !py-14 !px-8"
+                {/* DropZone */}
+                <div className="mb-8 max-w-xl stagger-item">
+                  <div className="relative group">
+                    <div
+                      className="absolute -inset-1 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, #9333ea, #a855f7, #ec4899)",
+                      }}
                     />
-                    <p className="text-sm text-[var(--color-text-muted)] mt-4 text-center">
-                      画像は編集エディタ、動画・音声は形式変換ツールへ自動で移動します
-                    </p>
+                    <div className="relative">
+                      <DropZone
+                        onFilesSelected={handleFilesSelected}
+                        accept="all"
+                        className="!border-2 !border-dashed !border-[var(--color-border)] hover:!border-[var(--color-accent)] transition-colors !py-10 !px-6"
+                      />
+                      <p className="text-xs text-[var(--color-text-muted)] mt-3 text-center">
+                        画像 → 編集エディタ　　動画・音声 → 形式変換ツール
+                      </p>
+                    </div>
                   </div>
+                </div>
+
+                {/* CTA buttons */}
+                <div className="flex flex-wrap gap-4 mb-10 stagger-item">
+                  <Link href="/image">
+                    <Button
+                      size="lg"
+                      variant="primary"
+                      icon={<ImageIcon size={20} />}
+                      className="!px-8 !py-4 !h-auto !rounded-xl hover:scale-105 transition-transform"
+                    >
+                      画像エディタを開く
+                    </Button>
+                  </Link>
+                  <Link href="/convert">
+                    <Button
+                      size="lg"
+                      variant="secondary"
+                      icon={<ArrowsClockwise size={20} />}
+                      className="!px-8 !py-4 !h-auto !rounded-xl hover:scale-105 transition-transform"
+                    >
+                      形式変換ツール
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Trust pills */}
+                <div className="flex flex-wrap gap-5 stagger-item">
+                  {[
+                    {
+                      icon: <Lock size={16} weight="duotone" />,
+                      text: "100%ローカル処理",
+                    },
+                    {
+                      icon: <Lightning size={16} weight="duotone" />,
+                      text: "超高速処理",
+                    },
+                    {
+                      icon: <Check size={16} weight="duotone" />,
+                      text: "完全無料",
+                    },
+                    {
+                      icon: <Globe size={16} weight="duotone" />,
+                      text: "登録不要",
+                    },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]"
+                    >
+                      <span className="text-[var(--color-accent)]">
+                        {item.icon}
+                      </span>
+                      <span>{item.text}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-6 stagger-item px-4 sm:px-0">
-                <Link href="/image">
-                  <Button
-                    size="lg"
-                    variant="primary"
-                    icon={<ImageIcon size={20} />}
-                    className="w-full sm:w-auto !px-10 !py-5 !h-auto !text-base !rounded-2xl hover:scale-105 transition-transform"
-                  >
-                    画像エディタを開く
-                  </Button>
-                </Link>
-                <Link href="/convert">
-                  <Button
-                    size="lg"
-                    variant="secondary"
-                    icon={<ArrowsClockwise size={20} />}
-                    className="w-full sm:w-auto !px-10 !py-5 !h-auto !text-base !rounded-2xl hover:scale-105 transition-transform"
-                  >
-                    形式変換ツール
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Trust Indicators */}
-              <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-12 mt-16 stagger-item">
-                {[
-                  {
-                    icon: <Lock size={24} weight="duotone" />,
-                    text: "100%ローカル処理",
-                  },
-                  {
-                    icon: <Lightning size={24} weight="duotone" />,
-                    text: "超高速処理",
-                  },
-                  {
-                    icon: <Check size={24} weight="duotone" />,
-                    text: "完全無料",
-                  },
-                  {
-                    icon: <Globe size={24} weight="duotone" />,
-                    text: "登録不要",
-                  },
-                ].map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 text-[var(--color-text-muted)]"
-                  >
-                    <span className="text-[var(--color-accent)]">
-                      {item.icon}
+              {/* RIGHT: CSS editor mock — desktop only */}
+              <div className="hidden lg:block w-[420px] xl:w-[460px] flex-shrink-0">
+                <div
+                  className="rounded-2xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)]"
+                  style={{
+                    boxShadow:
+                      "0 0 80px rgba(168,85,247,0.18), 0 20px 60px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  {/* Title bar */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-[var(--color-surface-raised)] border-b border-[var(--color-border)]">
+                    <div className="flex gap-1.5">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ background: "rgba(248,113,113,0.7)" }}
+                      />
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ background: "rgba(251,191,36,0.7)" }}
+                      />
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ background: "rgba(52,211,153,0.7)" }}
+                      />
+                    </div>
+                    <span className="text-xs text-[var(--color-text-muted)] flex-1 text-center font-mono">
+                      photo_edit.jpg — MediEdi!
                     </span>
-                    <span className="text-sm font-medium">{item.text}</span>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* Scroll Indicator */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
-            <span className="text-sm text-[var(--color-text-muted)]">
-              スクロール
-            </span>
-            <div className="w-6 h-10 rounded-full border-2 border-[var(--color-border)] flex justify-center pt-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" />
-            </div>
-          </div>
-        </section>
-
-        {/* Stats Section */}
-        <section className="py-32 bg-[var(--color-bg)]">
-          <div className="w-full flex justify-center">
-            <div className="w-full max-w-5xl px-8 sm:px-12 lg:px-20">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-10">
-                {stats.map((stat, index) => (
-                  <Card key={index} padding="lg" className="text-center">
-                    <div className="text-4xl sm:text-5xl font-bold text-[var(--color-accent)] mb-3">
-                      {stat.value}
-                    </div>
-                    <div className="text-lg font-semibold text-[var(--color-text)] mb-2">
-                      {stat.label}
-                    </div>
-                    <div className="text-sm text-[var(--color-text-muted)]">
-                      {stat.description}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section className="py-36 relative overflow-hidden">
-          <div className="absolute inset-0 hero-gradient opacity-50" />
-
-          <div className="relative w-full flex justify-center">
-            <div className="w-full max-w-5xl px-8 sm:px-12 lg:px-20">
-              <div className="text-center mb-20">
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[var(--color-text)] mb-8">
-                  パワフルな機能を
-                  <span className="gradient-text">シンプル</span>に
-                </h2>
-                <p className="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
-                  プロフェッショナルな編集機能を、誰でも簡単に使えるインターフェースで
-                </p>
-              </div>
-
-              <div className="grid lg:grid-cols-3 gap-8 lg:gap-10">
-                {features.map((feature, index) => (
-                  <Card
-                    key={index}
-                    interactive
-                    padding="lg"
-                    className="relative group h-full !p-10"
+                  {/* Canvas area — checkerboard + gradient image */}
+                  <div
+                    className="relative h-52"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(45deg, #0f1629 25%, transparent 25%), linear-gradient(-45deg, #0f1629 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #0f1629 75%), linear-gradient(-45deg, transparent 75%, #0f1629 75%)",
+                      backgroundSize: "16px 16px",
+                      backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
+                      backgroundColor: "#07091a",
+                    }}
                   >
-                    {feature.badge && (
-                      <div className="absolute top-6 right-6 px-4 py-1.5 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] text-xs font-semibold">
-                        {feature.badge}
+                    {/* Fake image preview */}
+                    <div
+                      className="absolute inset-5 rounded-xl overflow-hidden"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #1e1b4b 0%, #312e81 35%, #6d28d9 65%, #a78bfa 100%)",
+                      }}
+                    >
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background:
+                            "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.6) 100%)",
+                        }}
+                      />
+                      <div
+                        className="absolute top-6 left-6 w-14 h-14 rounded-full"
+                        style={{
+                          background: "rgba(255,255,255,0.1)",
+                          backdropFilter: "blur(4px)",
+                        }}
+                      />
+                      <div
+                        className="absolute top-10 right-6 w-20 h-8 rounded-lg"
+                        style={{ background: "rgba(255,255,255,0.06)" }}
+                      />
+                      {/* Selection marquee */}
+                      <div
+                        className="absolute inset-4 rounded"
+                        style={{ border: "2px dashed #a855f7" }}
+                      >
+                        {[
+                          "-top-1 -left-1",
+                          "-top-1 -right-1",
+                          "-bottom-1 -left-1",
+                          "-bottom-1 -right-1",
+                        ].map((pos, i) => (
+                          <div
+                            key={i}
+                            className={`absolute ${pos} w-2.5 h-2.5 rounded-sm`}
+                            style={{ background: "#a855f7" }}
+                          />
+                        ))}
                       </div>
-                    )}
+                    </div>
+                    {/* Coordinate HUD */}
+                    <div
+                      className="absolute bottom-2 right-2 text-[10px] font-mono text-[var(--color-text-muted)] px-2 py-0.5 rounded"
+                      style={{ background: "rgba(0,0,0,0.6)" }}
+                    >
+                      1920 × 1080
+                    </div>
+                    <div
+                      className="absolute bottom-2 left-2 text-[10px] font-mono px-2 py-0.5 rounded"
+                      style={{
+                        background: "rgba(168,85,247,0.2)",
+                        color: "#c084fc",
+                      }}
+                    >
+                      RGB
+                    </div>
+                  </div>
 
-                    <div className="w-18 h-18 rounded-2xl bg-[var(--color-accent-soft)] flex items-center justify-center text-[var(--color-accent)] mb-8 group-hover:scale-110 transition-transform duration-300">
+                  {/* Adjustment sliders */}
+                  <div className="p-4 space-y-3 border-b border-[var(--color-border)]">
+                    {[
+                      { label: "明るさ", value: 68 },
+                      { label: "コントラスト", value: 52 },
+                      { label: "彩度", value: 78 },
+                      { label: "露出", value: 44 },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex items-center gap-3">
+                        <span className="text-xs text-[var(--color-text-muted)] w-20 text-right shrink-0">
+                          {label}
+                        </span>
+                        <div className="flex-1 h-1.5 bg-[var(--color-border)] rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${value}%`,
+                              background:
+                                "linear-gradient(90deg, #9333ea, #a855f7)",
+                            }}
+                          />
+                        </div>
+                        <span
+                          className="text-xs font-mono w-6 shrink-0"
+                          style={{ color: "#c084fc" }}
+                        >
+                          {value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Toolbar tabs */}
+                  <div className="flex divide-x divide-[var(--color-border)]">
+                    {["フィルター", "クロップ", "リサイズ", "Export"].map(
+                      (tab, i) => (
+                        <button
+                          key={tab}
+                          className="flex-1 py-2.5 text-xs font-medium transition-colors"
+                          style={
+                            i === 0
+                              ? {
+                                  background: "rgba(168,85,247,0.12)",
+                                  color: "#c084fc",
+                                }
+                              : { color: "var(--color-text-muted)" }
+                          }
+                        >
+                          {tab}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════
+            STATS — Editorial strip with giant numbers
+        ═══════════════════════════════════════ */}
+        <section className="border-y border-[var(--color-border)] bg-[var(--color-surface)]">
+          <div className="w-full max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-[var(--color-border)]">
+              {stats.map((stat, i) => (
+                <div
+                  key={i}
+                  className="group py-12 px-8 hover:bg-[var(--color-accent-soft)] transition-colors cursor-default"
+                >
+                  <div
+                    className="gradient-text font-black mb-2 leading-none"
+                    style={{ fontSize: "clamp(48px, 6vw, 80px)" }}
+                  >
+                    {stat.value}
+                  </div>
+                  <div className="text-sm font-semibold text-[var(--color-text)] mb-1">
+                    {stat.label}
+                  </div>
+                  <div className="text-xs text-[var(--color-text-muted)]">
+                    {stat.description}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════
+            FEATURES — Editorial left-aligned header + feature-card grid
+        ═══════════════════════════════════════ */}
+        <section className="py-32 relative overflow-hidden">
+          <div className="absolute inset-0 hero-gradient opacity-40" />
+          <div className="relative w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
+            {/* Left-aligned editorial header */}
+            <div className="mb-16 max-w-lg">
+              <div className="text-xs uppercase tracking-widest text-[var(--color-accent)] mb-4 font-mono">
+                Features
+              </div>
+              <h2 className="text-5xl sm:text-6xl font-black text-[var(--color-text)] leading-none">
+                パワフルな機能を
+                <br />
+                <span className="gradient-text">シンプル</span>に
+              </h2>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-6">
+              {features.map((feature, i) => (
+                <div key={i} className="feature-card p-8 rounded-3xl">
+                  <div className="flex items-start justify-between mb-8">
+                    <div className="w-14 h-14 rounded-2xl bg-[var(--color-accent-soft)] flex items-center justify-center text-[var(--color-accent)]">
                       {feature.icon}
                     </div>
-
-                    <h3 className="text-2xl font-bold text-[var(--color-text)] mb-5">
-                      {feature.title}
-                    </h3>
-
-                    <p className="text-[var(--color-text-muted)] mb-8 leading-relaxed">
-                      {feature.description}
-                    </p>
-
-                    <ul className="space-y-4">
-                      {feature.features.map((item, i) => (
-                        <li
-                          key={i}
-                          className="flex items-center gap-4 text-[var(--color-text)]"
-                        >
-                          <Check
-                            size={20}
-                            weight="bold"
-                            className="text-[var(--color-success)] flex-shrink-0"
-                          />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    {feature.cta && (
-                      <Link
-                        href={feature.cta.href}
-                        className="mt-8 inline-flex items-center gap-2"
-                      >
-                        <Button
-                          size="sm"
-                          variant="primary"
-                          icon={<ArrowRight size={16} />}
-                        >
-                          {feature.cta.label}
-                        </Button>
-                      </Link>
+                    {feature.badge && (
+                      <span className="px-3 py-1.5 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] text-xs font-semibold">
+                        {feature.badge}
+                      </span>
                     )}
-                  </Card>
-                ))}
-              </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-[var(--color-text)] mb-4">
+                    {feature.title}
+                  </h3>
+                  <p className="text-[var(--color-text-muted)] text-sm leading-relaxed mb-6">
+                    {feature.description}
+                  </p>
+                  <ul className="space-y-2.5">
+                    {feature.features.map((item, j) => (
+                      <li
+                        key={j}
+                        className="flex items-center gap-3 text-sm text-[var(--color-text)]"
+                      >
+                        <Check
+                          size={14}
+                          weight="bold"
+                          className="text-[var(--color-success)] flex-shrink-0"
+                        />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  {feature.cta && (
+                    <Link href={feature.cta.href} className="mt-6 inline-block">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        icon={<ArrowRight size={14} />}
+                      >
+                        {feature.cta.label}
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Tools Grid Section */}
-        <section className="py-36 bg-[var(--color-bg)]">
-          <div className="w-full flex justify-center">
-            <div className="w-full max-w-5xl px-8 sm:px-12 lg:px-20">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl sm:text-5xl font-bold text-[var(--color-text)] mb-8">
+        {/* ═══════════════════════════════════════
+            TOOLS — Bento grid
+        ═══════════════════════════════════════ */}
+        <section className="py-32 bg-[var(--color-bg)]">
+          <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
+              <div>
+                <div className="text-xs uppercase tracking-widest text-[var(--color-accent)] mb-3 font-mono">
+                  Tools
+                </div>
+                <h2 className="text-4xl sm:text-5xl font-black text-[var(--color-text)]">
                   画像編集ツール
                 </h2>
-                <p className="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
-                  必要なツールをクリックするだけ。すべてブラウザ内で完結します。
-                </p>
               </div>
+              <p className="text-sm text-[var(--color-text-muted)] max-w-xs sm:text-right">
+                必要なツールをクリックするだけ。
+                <br />
+                すべてブラウザ内で完結します。
+              </p>
+            </div>
 
-              <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-5">
-                {tools.map((tool, index) => (
-                  <Link key={index} href={tool.href}>
-                    <Card interactive className="text-center !p-6">
-                      <div className="text-[var(--color-accent)] mb-4 flex justify-center group-hover:scale-125 transition-transform duration-300">
-                        {tool.icon}
-                      </div>
-                      <h3 className="font-semibold text-[var(--color-text)] mb-2">
+            {/* Bento: first cell wider */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <Link href={tools[0].href} className="sm:col-span-2">
+                <div className="group h-28 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] transition-all duration-200 p-5 flex items-center gap-5">
+                  <div className="text-[var(--color-accent)] group-hover:scale-110 transition-transform flex-shrink-0">
+                    {tools[0].icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-[var(--color-text)] mb-1">
+                      {tools[0].name}
+                    </div>
+                    <div className="text-sm text-[var(--color-text-muted)] truncate">
+                      {tools[0].description}
+                    </div>
+                  </div>
+                  <ArrowRight
+                    size={16}
+                    className="text-[var(--color-accent)] flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  />
+                </div>
+              </Link>
+
+              {tools.slice(1).map((tool, i) => (
+                <Link key={i + 1} href={tool.href}>
+                  <div className="group h-28 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] transition-all duration-200 p-5 flex flex-col justify-between">
+                    <div className="text-[var(--color-accent)] group-hover:scale-110 transition-transform w-fit">
+                      {tool.icon}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-[var(--color-text)] text-sm">
                         {tool.name}
-                      </h3>
-                      <p className="text-xs text-[var(--color-text-muted)] line-clamp-2">
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)] mt-0.5 line-clamp-1">
                         {tool.description}
-                      </p>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* How it works */}
-        <section className="py-36">
-          <div className="w-full flex justify-center">
-            <div className="w-full max-w-5xl px-8 sm:px-12 lg:px-20">
-              <div className="text-center mb-20">
-                <h2 className="text-4xl sm:text-5xl font-bold text-[var(--color-text)] mb-8">
-                  シンプルな<span className="gradient-text">3ステップ</span>
-                </h2>
-                <p className="text-xl text-[var(--color-text-muted)]">
-                  複雑な操作は一切不要
-                </p>
+        {/* ═══════════════════════════════════════
+            HOW IT WORKS — Oversized step numbers as background
+        ═══════════════════════════════════════ */}
+        <section className="py-32 relative overflow-hidden">
+          <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
+            <div className="text-center mb-20">
+              <div className="text-xs uppercase tracking-widest text-[var(--color-accent)] mb-4 font-mono">
+                How it works
               </div>
+              <h2 className="text-5xl sm:text-6xl font-black text-[var(--color-text)]">
+                シンプルな<span className="gradient-text">3ステップ</span>
+              </h2>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 lg:gap-16">
-                {howItWorks.map((item, index) => (
-                  <div key={index} className="relative text-center group">
-                    {index < 2 && (
-                      <div className="hidden md:block absolute top-20 left-[60%] w-[80%] h-0.5">
-                        <div className="w-full h-full bg-gradient-to-r from-[var(--color-accent)]/50 to-transparent" />
-                      </div>
-                    )}
-                    <div className="relative z-10">
-                      <div className="w-28 h-28 mx-auto mb-10 bg-[var(--color-accent)] rounded-3xl flex items-center justify-center text-[var(--color-text-inverse)] shadow-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                        {item.icon}
-                      </div>
-                      <div className="absolute -top-3 -right-3 w-12 h-12 bg-[var(--color-accent-hover)] rounded-full flex items-center justify-center text-[var(--color-text-inverse)] text-sm font-bold shadow-lg left-1/2 ml-10">
-                        {item.step}
-                      </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
+              {howItWorks.map((item, i) => (
+                <div key={i} className="relative group">
+                  {/* Giant decorative number */}
+                  <div
+                    className="absolute font-black text-[var(--color-accent)] select-none pointer-events-none"
+                    style={{
+                      fontSize: "clamp(120px, 18vw, 200px)",
+                      lineHeight: 1,
+                      opacity: 0.04,
+                      top: "-20px",
+                      left: "-10px",
+                    }}
+                  >
+                    {item.step}
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative z-10 pt-10">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-accent)] mb-6 group-hover:border-[var(--color-accent)] group-hover:bg-[var(--color-accent-soft)] transition-all">
+                      {item.icon}
                     </div>
-                    <h3 className="text-2xl font-bold text-[var(--color-text)] mb-5">
+                    <div className="text-xs font-mono text-[var(--color-text-muted)] mb-3">
+                      STEP {item.step}
+                    </div>
+                    <h3 className="text-xl font-bold text-[var(--color-text)] mb-4">
                       {item.title}
                     </h3>
-                    <p className="text-[var(--color-text-muted)] max-w-xs mx-auto leading-relaxed">
+                    <p className="text-[var(--color-text-muted)] text-sm leading-relaxed">
                       {item.description}
                     </p>
                   </div>
-                ))}
-              </div>
+
+                  {/* Connector */}
+                  {i < 2 && (
+                    <div
+                      className="hidden md:block absolute top-16 left-full w-1/2 h-px"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, rgba(168,85,247,0.4), transparent)",
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Supported Formats */}
-        <section className="py-36 bg-[var(--color-surface)] border-t border-b border-[var(--color-border)]">
-          <div className="w-full flex justify-center">
-            <div className="w-full max-w-5xl px-8 sm:px-12 lg:px-20">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl sm:text-5xl font-bold text-[var(--color-text)] mb-8">
+        {/* ═══════════════════════════════════════
+            FORMATS — Marquee ticker rows
+        ═══════════════════════════════════════ */}
+        <section className="py-24 bg-[var(--color-surface)] border-t border-b border-[var(--color-border)] overflow-hidden">
+          <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 mb-12">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <div className="text-xs uppercase tracking-widest text-[var(--color-accent)] mb-3 font-mono">
+                  Supported Formats
+                </div>
+                <h2 className="text-4xl sm:text-5xl font-black text-[var(--color-text)]">
                   対応フォーマット
                 </h2>
-                <p className="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
-                  主要なメディアフォーマットをすべてサポート
-                </p>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
-                {formatCategories.map((category, index) => (
-                  <Card key={index} padding="lg" className="text-center">
-                    <div className="w-24 h-24 mx-auto mb-8 bg-[var(--color-accent-soft)] rounded-2xl flex items-center justify-center text-[var(--color-accent)] shadow-[var(--shadow-lg)]">
-                      {category.icon}
-                    </div>
-                    <h3 className="text-2xl font-bold text-[var(--color-text)] mb-8">
-                      {category.title}
-                    </h3>
-                    <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3">
-                      {category.formats.map((format, i) => (
-                        <span
-                          key={i}
-                          className="group relative px-3.5 py-2 sm:px-5 sm:py-2.5 bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] rounded-full text-xs sm:text-sm font-medium hover:bg-[var(--color-accent)] hover:text-[var(--color-text-inverse)] transition-colors cursor-default"
-                        >
-                          {format.name}
-                          {/* Tooltip - hidden on mobile, visible on hover for desktop */}
-                          <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs text-[var(--color-text-inverse)] bg-[var(--color-text)] rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 hidden sm:block">
-                            {format.desc}
-                            <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[var(--color-text)]" />
-                          </span>
-                        </span>
-                      ))}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Browser Notice */}
-        <section className="py-20 bg-[var(--color-warning-soft)]">
-          <div className="w-full flex justify-center">
-            <div className="w-full max-w-4xl px-8 sm:px-12 lg:px-20">
-              <Card
-                padding="lg"
-                className="flex items-start gap-6 sm:gap-8 !p-8 sm:!p-10"
-              >
-                <div className="flex-shrink-0 w-16 h-16 bg-[var(--color-warning)] rounded-2xl flex items-center justify-center shadow-[var(--shadow-lg)]">
-                  <Info size={32} weight="bold" className="text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-[var(--color-text)] mb-4">
-                    ブラウザ要件
-                  </h3>
-                  <p className="text-[var(--color-text-muted)] leading-relaxed">
-                    本アプリケーションはWebAssembly (SharedArrayBuffer)
-                    を使用しています。
-                    <strong className="text-[var(--color-text)]">
-                      {" "}
-                      Chrome, Firefox, Edge{" "}
-                    </strong>
-                    の最新版で最適な動作が期待できます。Safari
-                    は一部機能が制限される場合があります。
-                  </p>
-                </div>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA */}
-        <section className="py-36 relative overflow-hidden">
-          <div className="absolute inset-0 mesh-gradient opacity-50" />
-
-          <div className="relative w-full flex justify-center">
-            <div className="w-full max-w-4xl px-8 sm:px-12 lg:px-20 text-center">
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[var(--color-text)] mb-12">
-                今すぐ
-                <span className="gradient-text">無料</span>
-                で始めよう
-              </h2>
-              <p className="text-xl text-[var(--color-text-muted)] mb-14 max-w-2xl mx-auto leading-relaxed">
-                登録不要、インストール不要。ブラウザを開くだけで、
-                プロフェッショナルなメディア編集を体験できます。
+              <p className="text-sm text-[var(--color-text-muted)]">
+                主要なメディアフォーマットをすべてサポート
               </p>
-              <div className="flex flex-wrap justify-center gap-6">
-                <Link href="/image">
-                  <Button
-                    size="lg"
-                    variant="primary"
-                    icon={<ArrowRight size={20} />}
-                    className="!px-12 !py-6 !h-auto !text-lg !rounded-2xl shadow-2xl hover:scale-105 transition-transform"
-                  >
-                    無料で始める
-                  </Button>
-                </Link>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {formatCategories.map((cat, i) => (
+              <div key={i} className="flex overflow-hidden group/row">
+                <div
+                  className="flex gap-3 items-center whitespace-nowrap group-hover/row:[animation-play-state:paused]"
+                  style={{
+                    animation: `${i % 2 === 0 ? "marquee-ltr" : "marquee-rtl"} ${22 + i * 5}s linear infinite`,
+                  }}
+                >
+                  {/* Duplicate for seamless loop */}
+                  {[...cat.formats, ...cat.formats].map((fmt, j) => (
+                    <span
+                      key={j}
+                      title={fmt.desc}
+                      className="relative inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium flex-shrink-0 cursor-default group/pill"
+                      style={{
+                        background: "var(--color-accent-soft)",
+                        color: "var(--color-accent-text)",
+                      }}
+                    >
+                      <span className="text-[var(--color-accent)] opacity-60">
+                        {cat.icon}
+                      </span>
+                      {fmt.name}
+                      {/* Tooltip */}
+                      <span
+                        className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] px-3 py-1.5 rounded-lg text-xs font-normal text-[var(--color-text)] opacity-0 group-hover/pill:opacity-100 transition-opacity whitespace-normal text-center z-50"
+                        style={{
+                          background: "var(--color-surface-raised)",
+                          boxShadow: "var(--shadow-md)",
+                          border: "1px solid var(--color-border)",
+                        }}
+                      >
+                        {fmt.desc}
+                      </span>
+                    </span>
+                  ))}
+                </div>
               </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════
+            BROWSER NOTICE — Compact strip
+        ═══════════════════════════════════════ */}
+        <section className="py-6 bg-[var(--color-warning-soft)]">
+          <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-[var(--color-warning)] flex items-center justify-center flex-shrink-0">
+                <Info size={20} weight="bold" className="text-white" />
+              </div>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                <strong className="text-[var(--color-text)]">
+                  推奨ブラウザ:{" "}
+                </strong>
+                Chrome, Firefox, Edge の最新版。WebAssembly (SharedArrayBuffer)
+                を使用しています。Safari は一部機能が制限される場合があります。
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════
+            CTA — Full-screen mesh gradient
+        ═══════════════════════════════════════ */}
+        <section
+          className="relative overflow-hidden"
+          style={{ minHeight: "70vh", display: "flex", alignItems: "center" }}
+        >
+          <div className="absolute inset-0 mesh-gradient" />
+          <div
+            className="absolute inset-0 grid-pattern"
+            style={{ opacity: 0.3 }}
+          />
+
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-32 text-center">
+            <div
+              className="font-black text-[var(--color-text)] leading-none mb-8"
+              style={{ fontSize: "clamp(48px, 9vw, 120px)" }}
+            >
+              今すぐ<span className="gradient-text">無料</span>で<br />
+              始めよう
+            </div>
+            <p className="text-lg sm:text-xl text-[var(--color-text-muted)] mb-12 max-w-xl mx-auto leading-relaxed">
+              登録不要、インストール不要。
+              <br />
+              ブラウザを開くだけで始められます。
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link href="/image">
+                <Button
+                  size="lg"
+                  variant="primary"
+                  icon={<ArrowRight size={20} />}
+                  className="!px-12 !py-5 !h-auto !text-lg !rounded-2xl hover:scale-105 transition-transform"
+                >
+                  無料で始める
+                </Button>
+              </Link>
+              <Link href="/convert">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  icon={<ArrowsClockwise size={20} />}
+                  className="!px-10 !py-5 !h-auto !text-lg !rounded-2xl hover:scale-105 transition-transform"
+                >
+                  形式変換を試す
+                </Button>
+              </Link>
             </div>
           </div>
         </section>

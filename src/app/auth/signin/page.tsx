@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { ANALYTICS_EVENTS, trackClientEvent, trackPageView } from "@/lib/analytics/client";
+import {
+  ANALYTICS_EVENTS,
+  trackClientEvent,
+  trackPageView,
+} from "@/lib/analytics/client";
 import { toast } from "@/stores/toastStore";
 
 const socialProviders = [
@@ -48,10 +52,60 @@ const socialProviders = [
   },
 ];
 
+// Left panel feature callouts
+const features = [
+  {
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    title: "形式変換",
+    description: "動画・音声・画像を瞬時に変換。30以上の形式に対応。",
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 16M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    title: "画像編集",
+    description: "リサイズ・クロップ・フィルター。プロ品質の編集をブラウザで。",
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    title: "プライバシー安心",
+    description:
+      "すべての処理はブラウザ内で完結。ファイルはサーバーに送信されません。",
+  },
+];
+
 function SignInContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { signIn, signInWithEmail, signUp } = useAuth();
+  const { user, loading, signIn, signInWithEmail, signUp } = useAuth();
 
   const callbackUrlParam = searchParams.get("callbackUrl");
   const callbackUrl =
@@ -62,6 +116,7 @@ function SignInContent() {
       : "/";
   const error = searchParams.get("error");
 
+  // All hooks must be called unconditionally before any early returns
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -69,9 +124,36 @@ function SignInContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Redirect already-logged-in users away from the signin page
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace(callbackUrl);
+    }
+  }, [user, loading, router, callbackUrl]);
+
   useEffect(() => {
     void trackPageView("/auth/signin");
   }, []);
+
+  // Don't render the form while auth state is loading or a redirect is pending
+  if (loading || (!loading && user)) {
+    return (
+      <div className="min-h-screen flex bg-[var(--color-bg)]">
+        {/* Left skeleton */}
+        <div className="hidden lg:flex lg:w-[55%] bg-[#0d1326]" />
+        {/* Right skeleton */}
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="w-full max-w-sm animate-pulse space-y-4">
+            <div className="h-8 bg-[var(--color-border)] rounded w-40 mx-auto" />
+            <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
+            <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
+            <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
+            <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +166,11 @@ function SignInContent() {
           pagePath: "/auth/signin",
           eventParams: { method: "email_password" },
         });
-        const { requiresEmailVerification } = await signUp(email, password, fullName);
+        const { requiresEmailVerification } = await signUp(
+          email,
+          password,
+          fullName,
+        );
         void trackClientEvent({
           eventName: ANALYTICS_EVENTS.SIGNUP_COMPLETE,
           pagePath: "/auth/signin",
@@ -107,7 +193,8 @@ function SignInContent() {
       }
     } catch (err: unknown) {
       console.error("Auth error:", err);
-      const message = err instanceof Error ? err.message : "ログインに失敗しました";
+      const message =
+        err instanceof Error ? err.message : "ログインに失敗しました";
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -120,161 +207,510 @@ function SignInContent() {
       await signIn(provider, callbackUrl);
     } catch (err: unknown) {
       console.error("Social sign in error:", err);
-      const message = err instanceof Error ? err.message : "ソーシャルログインに失敗しました";
+      const message =
+        err instanceof Error ? err.message : "ソーシャルログインに失敗しました";
       toast.error(message);
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-lg">
-      <div className="bg-[var(--color-surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] p-6 sm:p-8 lg:p-10">
-        <div className="text-center mb-8 sm:mb-10">
-          <Link href="/" className="inline-flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-violet-600 via-blue-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
-              <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none">
-                <path d="M3 19V5l6 7 6-7v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="20" cy="5" r="1.5" fill="currentColor" opacity="0.8"/>
-                <circle cx="18" cy="9" r="0.8" fill="currentColor" opacity="0.5"/>
+    <div className="min-h-screen flex bg-[var(--color-bg)]">
+      {/* ─────────────────── LEFT PANEL (lg+) ─────────────────── */}
+      <div
+        className="hidden lg:flex lg:w-[55%] relative overflow-hidden flex-col justify-between p-12"
+        style={{
+          background:
+            "linear-gradient(135deg, #0d1326 0%, #070913 60%, #0a0c1a 100%)",
+        }}
+      >
+        {/* Violet glow orb — top right */}
+        <div
+          className="pointer-events-none absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full opacity-30"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(168,85,247,0.55) 0%, rgba(139,92,246,0.18) 50%, transparent 70%)",
+            filter: "blur(48px)",
+          }}
+        />
+        {/* Blue glow orb — bottom left */}
+        <div
+          className="pointer-events-none absolute -bottom-40 -left-24 w-[420px] h-[420px] rounded-full opacity-25"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(59,130,246,0.5) 0%, rgba(99,102,241,0.15) 55%, transparent 70%)",
+            filter: "blur(56px)",
+          }}
+        />
+        {/* Subtle mid orb */}
+        <div
+          className="pointer-events-none absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full opacity-10"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(192,132,252,0.6) 0%, transparent 65%)",
+            filter: "blur(40px)",
+          }}
+        />
+
+        {/* Grid mesh overlay */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(168,85,247,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.5) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+
+        {/* Top: Logo */}
+        <div className="relative z-10">
+          <Link href="/" className="inline-flex items-center gap-3 group">
+            <div className="w-11 h-11 bg-gradient-to-br from-violet-500 via-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:shadow-violet-500/50 transition-shadow duration-300">
+              <svg
+                className="w-6 h-6 text-white"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M3 19V5l6 7 6-7v14"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle
+                  cx="20"
+                  cy="5"
+                  r="1.5"
+                  fill="currentColor"
+                  opacity="0.8"
+                />
+                <circle
+                  cx="18"
+                  cy="9"
+                  r="0.8"
+                  fill="currentColor"
+                  opacity="0.5"
+                />
               </svg>
             </div>
-            <span className="font-bold text-2xl text-[var(--color-text)]">MediEdi!</span>
-          </Link>
-
-          <h1 className="text-2xl font-bold text-[var(--color-text)] mb-2">
-            {mode === "signin" ? "ログイン" : "新規登録"}
-          </h1>
-          <p className="text-[var(--color-text-muted)]">
-            {mode === "signin"
-              ? "アカウントにログインして続行してください"
-              : "アカウントを作成して開始しましょう"}
-          </p>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-[var(--color-error-soft)] border border-[var(--color-error)] rounded-[var(--radius-lg)]">
-            <p className="text-sm text-[var(--color-error)]">{decodeURIComponent(error)}</p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-7">
-          {socialProviders.map((provider) => (
-            <button
-              key={provider.id}
-              onClick={() => handleSocialSignIn(provider.id)}
-              disabled={isLoading}
-              className="flex items-center justify-center gap-2 px-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-lg)] text-[var(--color-text)] hover:bg-[var(--color-accent-soft)] transition-colors disabled:opacity-50"
+            <span
+              className="font-bold text-2xl"
+              style={{
+                background:
+                  "linear-gradient(90deg, #f1f5f9 0%, #c084fc 60%, #818cf8 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
             >
-              {provider.icon}
-              <span className="text-sm font-medium">{provider.name}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="relative mb-7">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[var(--color-border)]" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-[var(--color-surface)] text-[var(--color-text-muted)]">
-              または
+              MediEdi!
             </span>
+          </Link>
+        </div>
+
+        {/* Center: Headline + Features */}
+        <div className="relative z-10 space-y-10">
+          <div className="space-y-4">
+            <h1
+              className="text-5xl font-bold leading-[1.1] tracking-tight"
+              style={{
+                background:
+                  "linear-gradient(135deg, #f1f5f9 0%, #e2d9f3 40%, #a78bfa 75%, #818cf8 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              メディアを、
+              <br />
+              もっと自由に。
+            </h1>
+            <p className="text-base text-[#94a3b8] leading-relaxed max-w-xs">
+              変換・編集・圧縮をブラウザだけで完結。
+              インストール不要、すべてローカル処理。
+            </p>
+          </div>
+
+          {/* Feature callouts */}
+          <div className="space-y-4">
+            {features.map((feature, i) => (
+              <div key={i} className="flex items-start gap-4 group">
+                {/* Icon badge */}
+                <div
+                  className="mt-0.5 flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                  style={{
+                    background: "rgba(168,85,247,0.15)",
+                    border: "1px solid rgba(168,85,247,0.25)",
+                    color: "#c084fc",
+                  }}
+                >
+                  {feature.icon}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#e2e8f0] mb-0.5">
+                    {feature.title}
+                  </p>
+                  <p className="text-xs text-[#64748b] leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <form onSubmit={handleEmailAuth} className="space-y-5">
-          {mode === "signup" && (
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                お名前
-              </label>
-              <input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-bg)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
-                placeholder="山田 太郎"
-              />
+        {/* Bottom: Social proof / tagline */}
+        <div className="relative z-10">
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs text-[#94a3b8]"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.07)",
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            すべての処理はあなたのブラウザ内で完結します
+          </div>
+        </div>
+      </div>
+
+      {/* ─────────────────── RIGHT PANEL (auth form) ─────────────────── */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 sm:px-10 relative overflow-hidden">
+        {/* Subtle background glow for mobile (shows on all sizes but faint on desktop) */}
+        <div
+          className="pointer-events-none absolute top-0 right-0 w-72 h-72 opacity-10 lg:opacity-0 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(168,85,247,0.6) 0%, transparent 70%)",
+            filter: "blur(40px)",
+          }}
+        />
+
+        <div className="w-full max-w-sm relative z-10">
+          {/* Mobile-only logo */}
+          <div className="lg:hidden text-center mb-8">
+            <Link href="/" className="inline-flex items-center gap-2.5">
+              <div className="w-10 h-10 bg-gradient-to-br from-violet-500 via-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/30">
+                <svg
+                  className="w-6 h-6 text-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <path
+                    d="M3 19V5l6 7 6-7v14"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle
+                    cx="20"
+                    cy="5"
+                    r="1.5"
+                    fill="currentColor"
+                    opacity="0.8"
+                  />
+                  <circle
+                    cx="18"
+                    cy="9"
+                    r="0.8"
+                    fill="currentColor"
+                    opacity="0.5"
+                  />
+                </svg>
+              </div>
+              <span className="font-bold text-xl text-[var(--color-text)]">
+                MediEdi!
+              </span>
+            </Link>
+          </div>
+
+          {/* Heading */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-[var(--color-text)] mb-1.5">
+              {mode === "signin" ? "おかえりなさい" : "アカウント作成"}
+            </h2>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              {mode === "signin"
+                ? "アカウントにログインして続けましょう"
+                : "今すぐ無料で始めましょう"}
+            </p>
+          </div>
+
+          {/* Error banner */}
+          {error && (
+            <div
+              className="mb-6 p-3.5 rounded-[var(--radius-lg)] flex items-start gap-3"
+              style={{
+                background: "rgba(248,113,113,0.08)",
+                border: "1px solid rgba(248,113,113,0.25)",
+              }}
+            >
+              <svg
+                className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-error)]"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <p className="text-sm text-[var(--color-error)]">
+                {decodeURIComponent(error)}
+              </p>
             </div>
           )}
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-[var(--color-text)] mb-2">
-              メールアドレス
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-bg)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-[var(--color-text)] mb-2">
-              パスワード
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-12 border border-[var(--color-border)] rounded-[var(--radius-lg)] bg-[var(--color-bg)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
-                placeholder="••••••••"
-                required
-                minLength={8}
-              />
+          {/* Social sign-in buttons */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {socialProviders.map((provider) => (
               <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                key={provider.id}
+                onClick={() => handleSocialSignIn(provider.id)}
+                disabled={isLoading}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-[var(--radius-lg)] text-[var(--color-text)] text-sm font-medium transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: "var(--color-surface)",
+                  border: "1px solid var(--color-border)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(168,85,247,0.4)";
+                  e.currentTarget.style.background =
+                    "var(--color-surface-raised)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-border)";
+                  e.currentTarget.style.background = "var(--color-surface)";
+                }}
               >
-                {showPassword ? "非表示" : "表示"}
+                {provider.icon}
+                <span>{provider.name}</span>
               </button>
-            </div>
-            {mode === "signup" && (
-              <p className="mt-1 text-xs text-[var(--color-text-muted)]">8文字以上で入力してください</p>
-            )}
+            ))}
           </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3.5 px-4 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] font-semibold rounded-[var(--radius-lg)] shadow-[var(--shadow-md)] hover:opacity-95 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? "処理中..." : mode === "signin" ? "ログイン" : "新規登録"}
-          </button>
-        </form>
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[var(--color-border)]" />
+            </div>
+            <div className="relative flex justify-center">
+              <span
+                className="px-3 text-xs text-[var(--color-text-muted)]"
+                style={{ background: "var(--color-bg)" }}
+              >
+                またはメールで続ける
+              </span>
+            </div>
+          </div>
 
-        <p className="mt-6 text-center text-sm text-[var(--color-text-muted)]">
-          {mode === "signin" ? "アカウントをお持ちでないですか？ " : "すでにアカウントをお持ちですか？ "}
-          <button
-            onClick={() => setMode((prev) => (prev === "signin" ? "signup" : "signin"))}
-            className="text-[var(--color-accent-text)] hover:text-[var(--color-accent)] font-medium"
-          >
-            {mode === "signin" ? "新規登録" : "ログイン"}
-          </button>
-        </p>
-      </div>
+          {/* Email form */}
+          <form onSubmit={handleEmailAuth} className="space-y-4">
+            {mode === "signup" && (
+              <div>
+                <label
+                  htmlFor="fullName"
+                  className="block text-xs font-medium text-[var(--color-text-muted)] mb-1.5 uppercase tracking-wide"
+                >
+                  お名前
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-[var(--radius-lg)] text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] transition-all duration-200 outline-none"
+                  style={{
+                    background: "var(--color-surface)",
+                    border: "1px solid var(--color-border)",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(168,85,247,0.6)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 3px rgba(168,85,247,0.12)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "var(--color-border)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                  placeholder="山田 太郎"
+                />
+              </div>
+            )}
 
-      <p className="mt-6 text-center text-xs text-[var(--color-text-muted)]">
-        続行することで <Link href="/terms" className="text-[var(--color-accent-text)] hover:underline">利用規約</Link> と{" "}
-        <Link href="/privacy" className="text-[var(--color-accent-text)] hover:underline">プライバシーポリシー</Link> に同意したものとみなします。
-      </p>
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-xs font-medium text-[var(--color-text-muted)] mb-1.5 uppercase tracking-wide"
+              >
+                メールアドレス
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-[var(--radius-lg)] text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] transition-all duration-200 outline-none"
+                style={{
+                  background: "var(--color-surface)",
+                  border: "1px solid var(--color-border)",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(168,85,247,0.6)";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 0 3px rgba(168,85,247,0.12)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-border)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+                placeholder="you@example.com"
+                required
+              />
+            </div>
 
-      <div className="mt-4 text-center">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
-        >
-          <ArrowLeft size={16} />
-          ホームに戻る
-        </Link>
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-xs font-medium text-[var(--color-text-muted)] mb-1.5 uppercase tracking-wide"
+              >
+                パスワード
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 pr-16 rounded-[var(--radius-lg)] text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] transition-all duration-200 outline-none"
+                  style={{
+                    background: "var(--color-surface)",
+                    border: "1px solid var(--color-border)",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(168,85,247,0.6)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 3px rgba(168,85,247,0.12)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "var(--color-border)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                  placeholder="••••••••"
+                  required
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent-text)] transition-colors px-1"
+                >
+                  {showPassword ? "隠す" : "表示"}
+                </button>
+              </div>
+              {mode === "signup" && (
+                <p className="mt-1.5 text-xs text-[var(--color-text-muted)]">
+                  8文字以上で入力してください
+                </p>
+              )}
+            </div>
+
+            {/* Submit button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 px-4 rounded-[var(--radius-lg)] text-sm font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-[0.99] mt-2"
+              style={{
+                background: isLoading
+                  ? "rgba(168,85,247,0.6)"
+                  : "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                boxShadow: isLoading
+                  ? "none"
+                  : "0 4px 20px rgba(168,85,247,0.35)",
+              }}
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg
+                    className="w-4 h-4 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  処理中...
+                </span>
+              ) : mode === "signin" ? (
+                "ログイン"
+              ) : (
+                "アカウントを作成"
+              )}
+            </button>
+          </form>
+
+          {/* Toggle signin/signup */}
+          <p className="mt-5 text-center text-sm text-[var(--color-text-muted)]">
+            {mode === "signin"
+              ? "アカウントをお持ちでないですか？ "
+              : "すでにアカウントをお持ちですか？ "}
+            <button
+              onClick={() =>
+                setMode((prev) => (prev === "signin" ? "signup" : "signin"))
+              }
+              className="font-medium text-[var(--color-accent-text)] hover:text-[var(--color-accent)] transition-colors"
+            >
+              {mode === "signin" ? "新規登録" : "ログイン"}
+            </button>
+          </p>
+
+          {/* Footer links */}
+          <div className="mt-8 pt-6 border-t border-[var(--color-border)] space-y-3">
+            <p className="text-center text-xs text-[var(--color-text-muted)]">
+              続行することで{" "}
+              <Link
+                href="/terms"
+                className="text-[var(--color-accent-text)] hover:underline"
+              >
+                利用規約
+              </Link>{" "}
+              と{" "}
+              <Link
+                href="/privacy"
+                className="text-[var(--color-accent-text)] hover:underline"
+              >
+                プライバシーポリシー
+              </Link>{" "}
+              に同意したものとみなします。
+            </p>
+            <div className="text-center">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+              >
+                <ArrowLeft size={13} />
+                ホームに戻る
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -282,16 +718,22 @@ function SignInContent() {
 
 function LoadingFallback() {
   return (
-    <div className="w-full max-w-lg">
-      <div className="bg-[var(--color-surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] p-8 animate-pulse">
-        <div className="h-8 bg-[var(--color-border)] rounded w-40 mx-auto mb-8" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-7">
-          <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
-          <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
+    <div className="min-h-screen flex bg-[var(--color-bg)]">
+      {/* Left skeleton */}
+      <div className="hidden lg:block lg:w-[55%] bg-[#0d1326]" />
+      {/* Right skeleton */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-sm animate-pulse space-y-4">
+          <div className="h-7 bg-[var(--color-border)] rounded w-36" />
+          <div className="h-4 bg-[var(--color-border)] rounded w-52" />
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="h-11 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
+            <div className="h-11 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
+          </div>
+          <div className="h-11 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
+          <div className="h-11 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
+          <div className="h-11 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
         </div>
-        <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)] mb-4" />
-        <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)] mb-4" />
-        <div className="h-12 bg-[var(--color-border)] rounded-[var(--radius-lg)]" />
       </div>
     </div>
   );
@@ -299,10 +741,8 @@ function LoadingFallback() {
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] px-4 py-10 sm:py-14">
-      <Suspense fallback={<LoadingFallback />}>
-        <SignInContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<LoadingFallback />}>
+      <SignInContent />
+    </Suspense>
   );
 }

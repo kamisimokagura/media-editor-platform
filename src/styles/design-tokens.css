@@ -1,39 +1,40 @@
-/* MediEdi! Design System v2 - Design Tokens */
+/* MediEdi! Design System v3 — Dark-first, pollo.ai-inspired */
 
 :root {
   /* === Colors - Light === */
-  --color-bg: #FAFAFA;
-  --color-surface: #FFFFFF;
-  --color-surface-raised: #FFFFFF;
-  --color-border: #E5E7EB;
-  --color-border-hover: #D1D5DB;
-  --color-text: #1F2937;
-  --color-text-muted: #6B7280;
-  --color-text-inverse: #FFFFFF;
+  --color-bg: #f8f9fc;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f4f6fb;
+  --color-border: #e2e6f0;
+  --color-border-hover: #c5ccdc;
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: #ffffff;
 
-  --color-accent: #6366F1;
-  --color-accent-hover: #4F46E5;
-  --color-accent-soft: rgba(99, 102, 241, 0.1);
-  --color-accent-text: #4F46E5;
+  --color-accent: #7c3aed;
+  --color-accent-hover: #6d28d9;
+  --color-accent-soft: rgba(124, 58, 237, 0.08);
+  --color-accent-text: #6d28d9;
 
-  --color-success: #10B981;
-  --color-success-soft: rgba(16, 185, 129, 0.1);
-  --color-warning: #F59E0B;
-  --color-warning-soft: rgba(245, 158, 11, 0.1);
-  --color-error: #EF4444;
-  --color-error-soft: rgba(239, 68, 68, 0.1);
+  --color-success: #10b981;
+  --color-success-soft: rgba(16, 185, 129, 0.08);
+  --color-warning: #f59e0b;
+  --color-warning-soft: rgba(245, 158, 11, 0.08);
+  --color-error: #ef4444;
+  --color-error-soft: rgba(239, 68, 68, 0.08);
 
   /* === Radius === */
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
 
   /* === Shadow === */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 0 40px rgba(124, 58, 237, 0.2);
 
   /* === Spacing === */
   --space-xs: 4px;
@@ -48,66 +49,72 @@
   /* === Typography === */
   --font-display: var(--font-poppins), system-ui, sans-serif;
   --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-heading: var(--font-poppins), system-ui, sans-serif;
 
-  --text-display: 700 36px/1.2 var(--font-display);
-  --text-h1: 600 30px/1.3 var(--font-display);
-  --text-h2: 600 24px/1.35 var(--font-display);
+  --text-display: 700 40px/1.15 var(--font-display);
+  --text-h1: 700 32px/1.25 var(--font-display);
+  --text-h2: 600 26px/1.3 var(--font-display);
   --text-h3: 600 20px/1.4 var(--font-display);
-  --text-body: 400 16px/1.6 var(--font-body);
-  --text-body-sm: 400 14px/1.5 var(--font-body);
+  --text-body: 400 16px/1.65 var(--font-body);
+  --text-body-sm: 400 14px/1.55 var(--font-body);
   --text-caption: 500 12px/1.4 var(--font-body);
 
   /* === Transition === */
-  --transition-fast: 150ms ease;
+  --transition-fast: 120ms ease;
   --transition-base: 200ms ease;
-  --transition-slow: 300ms ease;
+  --transition-slow: 350ms ease;
 }
 
-/* === Dark Mode (class-based) === */
+/* === Dark Mode (class-based) — PRIMARY VISUAL IDENTITY === */
 .dark {
-  --color-bg: #09090B;
-  --color-surface: #18181B;
-  --color-surface-raised: #1F1F23;
-  --color-border: #27272A;
-  --color-border-hover: #3F3F46;
-  --color-text: #FAFAFA;
-  --color-text-muted: #A1A1AA;
-  --color-text-inverse: #09090B;
+  /* Deep navy-black — pollo.ai inspired */
+  --color-bg: #070913;
+  --color-surface: #0d1326;
+  --color-surface-raised: #131d33;
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-hover: rgba(255, 255, 255, 0.13);
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-text-inverse: #0d1326;
 
-  --color-accent: #818CF8;
-  --color-accent-hover: #6366F1;
-  --color-accent-soft: rgba(129, 140, 248, 0.1);
-  --color-accent-text: #A5B4FC;
+  /* Vibrant violet accent */
+  --color-accent: #a855f7;
+  --color-accent-hover: #9333ea;
+  --color-accent-soft: rgba(168, 85, 247, 0.12);
+  --color-accent-text: #c084fc;
 
-  --color-success: #34D399;
+  --color-success: #34d399;
   --color-success-soft: rgba(52, 211, 153, 0.1);
-  --color-warning: #FBBF24;
+  --color-warning: #fbbf24;
   --color-warning-soft: rgba(251, 191, 36, 0.1);
-  --color-error: #F87171;
+  --color-error: #f87171;
   --color-error-soft: rgba(248, 113, 113, 0.1);
 
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-lg: none;
+  /* Deep shadows + glow on dark */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 50px rgba(168, 85, 247, 0.3);
 }
 
-/* === Media query fallback for system preference === */
+/* === System dark preference fallback === */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --color-bg: #09090B;
-    --color-surface: #18181B;
-    --color-surface-raised: #1F1F23;
-    --color-border: #27272A;
-    --color-border-hover: #3F3F46;
-    --color-text: #FAFAFA;
-    --color-text-muted: #A1A1AA;
-    --color-text-inverse: #09090B;
-    --color-accent: #818CF8;
-    --color-accent-hover: #6366F1;
-    --color-accent-soft: rgba(129, 140, 248, 0.1);
-    --color-accent-text: #A5B4FC;
-    --shadow-sm: none;
-    --shadow-md: none;
-    --shadow-lg: none;
+    --color-bg: #070913;
+    --color-surface: #0d1326;
+    --color-surface-raised: #131d33;
+    --color-border: rgba(255, 255, 255, 0.07);
+    --color-border-hover: rgba(255, 255, 255, 0.13);
+    --color-text: #f1f5f9;
+    --color-text-muted: #64748b;
+    --color-text-inverse: #0d1326;
+    --color-accent: #a855f7;
+    --color-accent-hover: #9333ea;
+    --color-accent-soft: rgba(168, 85, 247, 0.12);
+    --color-accent-text: #c084fc;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 50px rgba(168, 85, 247, 0.3);
   }
 }

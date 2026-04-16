@@ -142,10 +142,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   ffmpegLoaded: false,
   activeTab: "editor",
   sidebarOpen: true,
-  darkMode: false,
+  darkMode: true,
 
   // Project actions
   createProject: (name) => {
+    const { mediaFiles } = get();
+    for (const file of mediaFiles) {
+      if (file.url) URL.revokeObjectURL(file.url);
+    }
     const project = createDefaultProject(name);
     set({ project, isDirty: false, mediaFiles: [] });
   },
@@ -294,9 +298,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       // Update timeline duration
       const maxEndTime = Math.max(
         ...updatedTracks.flatMap((t) =>
-          t.clips.map((c) => c.startTime + c.duration)
+          t.clips.map((c) => c.startTime + c.duration),
         ),
-        0
+        0,
       );
 
       return {
@@ -427,11 +431,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { initialImageData } = get();
     set({
       imageAdjustments: { ...defaultAdjustments },
-      originalImageData: initialImageData ? new ImageData(
-        new Uint8ClampedArray(initialImageData.data),
-        initialImageData.width,
-        initialImageData.height,
-      ) : get().originalImageData,
+      originalImageData: initialImageData
+        ? new ImageData(
+            new Uint8ClampedArray(initialImageData.data),
+            initialImageData.width,
+            initialImageData.height,
+          )
+        : get().originalImageData,
       adjustmentHistory: [{ ...defaultAdjustments }],
       historyIndex: 0,
     });

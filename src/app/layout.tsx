@@ -14,21 +14,57 @@ const inter = localFont({
   ],
   variable: "--font-inter",
   display: "swap",
-  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+  fallback: [
+    "system-ui",
+    "-apple-system",
+    "BlinkMacSystemFont",
+    "Segoe UI",
+    "sans-serif",
+  ],
 });
 
 const poppins = localFont({
   src: [
-    { path: "./fonts/poppins-latin-400-normal.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/poppins-latin-500-normal.woff2", weight: "500", style: "normal" },
-    { path: "./fonts/poppins-latin-600-normal.woff2", weight: "600", style: "normal" },
-    { path: "./fonts/poppins-latin-700-normal.woff2", weight: "700", style: "normal" },
-    { path: "./fonts/poppins-latin-800-normal.woff2", weight: "800", style: "normal" },
-    { path: "./fonts/poppins-latin-900-normal.woff2", weight: "900", style: "normal" },
+    {
+      path: "./fonts/poppins-latin-400-normal.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/poppins-latin-500-normal.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "./fonts/poppins-latin-600-normal.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "./fonts/poppins-latin-700-normal.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "./fonts/poppins-latin-800-normal.woff2",
+      weight: "800",
+      style: "normal",
+    },
+    {
+      path: "./fonts/poppins-latin-900-normal.woff2",
+      weight: "900",
+      style: "normal",
+    },
   ],
   variable: "--font-poppins",
   display: "swap",
-  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+  fallback: [
+    "system-ui",
+    "-apple-system",
+    "BlinkMacSystemFont",
+    "Segoe UI",
+    "sans-serif",
+  ],
 });
 
 // SEO Metadata
@@ -197,10 +233,7 @@ const organizationJsonLd = {
   name: "MediEdi!",
   url: "https://mediaeditor.app",
   logo: "https://mediaeditor.app/icon.svg",
-  sameAs: [
-    "https://twitter.com/mediedi_app",
-    "https://github.com/mediaeditor",
-  ],
+  sameAs: ["https://twitter.com/mediedi_app", "https://github.com/mediaeditor"],
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer support",
@@ -253,8 +286,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja" suppressHydrationWarning className={`${inter.variable} ${poppins.variable}`}>
+    <html
+      lang="ja"
+      suppressHydrationWarning
+      className={`${inter.variable} ${poppins.variable} dark`}
+    >
       <head>
+        {/* Dark mode default — no flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.add('dark')`,
+          }}
+        />
         {/* Structured Data */}
         <script
           type="application/ld+json"
@@ -262,18 +305,20 @@ export default function RootLayout({
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
         />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       </head>
-      <body className={`${inter.className} antialiased min-h-screen flex flex-col bg-white dark:bg-dark-950`}>
+      <body
+        className={`${inter.className} antialiased min-h-screen flex flex-col bg-[var(--color-bg)]`}
+      >
         <AuthProvider>
-          <div className="flex-1 flex flex-col w-full">
-            {children}
-          </div>
+          <div className="flex-1 flex flex-col w-full">{children}</div>
           <ToastContainer />
         </AuthProvider>
       </body>
